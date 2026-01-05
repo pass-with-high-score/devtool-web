@@ -325,38 +325,66 @@
     font-size: 1.5rem;
 }
 
-/* Loading State */
-.loadingState {
-    text-align: center;
-    padding: 4rem 2rem;
+/* Progress Bar */
+.progressContainer {
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    padding: 1.5rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
 }
 
-.loadingSpinner {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 2rem;
-    border: 6px solid var(--neo-black);
-    border-top-color: var(--neo-pink);
-    border-right-color: var(--neo-cyan);
-    border-bottom-color: var(--neo-yellow);
-    animation: spin 0.8s linear infinite;
+.progressBar {
+    width: 100%;
+    height: 24px;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    overflow: hidden;
+    margin-bottom: 1rem;
 }
 
-.loadingState p {
-    color: var(--neo-black);
-    font-size: 1.5rem;
+.progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neo-green), var(--neo-cyan), var(--neo-blue));
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+    transition: width 0.3s ease-out;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.progressInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.progressPercent {
     font-family: 'Lexend Mega', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--neo-black);
+    min-width: 60px;
 }
 
-.loadingHint {
-    color: var(--text-muted) !important;
-    font-size: 1rem !important;
-    font-family: 'Public Sans', sans-serif !important;
-    font-weight: 500 !important;
-    text-transform: none !important;
+.progressMessage {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Results */

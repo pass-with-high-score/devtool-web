@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import SubdomainTable from '@/components/SubdomainTable';
-import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, GithubIcon, WarningIcon, GlobeIcon, ServerIcon, StarIcon } from '@/components/Icons';
+import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, GithubIcon, WarningIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface ScanResult {
@@ -21,7 +21,6 @@ interface ScanResult {
 
 interface SourceStats {
   crtsh: number;
-  wordlist: number;
   virustotal: number;
   shodan: number;
   subfinder: number;
@@ -47,11 +46,18 @@ interface ScanResponse {
   subdomains: ScanResult[];
 }
 
+interface ProgressState {
+  stage: string;
+  message: string;
+  progress: number;
+}
+
 export default function Home() {
   const [domain, setDomain] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScanResponse | null>(null);
+  const [progress, setProgress] = useState<ProgressState | null>(null);
 
   // Settings
   const [showSettings, setShowSettings] = useState(false);
@@ -70,6 +76,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setProgress({ stage: 'init', message: 'Starting scan...', progress: 0 });
 
     try {
       const response = await fetch('/api/scan', {
@@ -84,16 +91,51 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to scan domain');
+        throw new Error('Failed to start scan');
       }
 
-      const data: ScanResponse = await response.json();
-      setResult(data);
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const event = JSON.parse(line);
+
+            if (event.type === 'progress') {
+              setProgress({
+                stage: event.stage,
+                message: event.message,
+                progress: event.progress,
+              });
+            } else if (event.type === 'result') {
+              setResult(event.data);
+            } else if (event.type === 'error') {
+              setError(event.message);
+            }
+          } catch {
+            console.warn('Failed to parse event:', line);
+          }
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+      setProgress(null);
     }
   };
 
@@ -213,12 +255,19 @@ export default function Home() {
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className={styles.loadingState}>
-          <div className={styles.loadingSpinner}></div>
-          <p>Scanning subdomains...</p>
-          <p className={styles.loadingHint}>This may take a few moments depending on the domain size</p>
+      {/* Progress Bar */}
+      {loading && progress && (
+        <div className={styles.progressContainer}>
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progressFill}
+              style={{ width: `${progress.progress}%` }}
+            />
+          </div>
+          <div className={styles.progressInfo}>
+            <span className={styles.progressPercent}>{progress.progress}%</span>
+            <span className={styles.progressMessage}>{progress.message}</span>
+          </div>
         </div>
       )}
 
