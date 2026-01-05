@@ -938,6 +938,182 @@
     margin-bottom: 0.25rem;
 }
 
+/* Settings Button */
+.settingsButton {
+    position: relative;
+    padding: 0.875rem 1rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    border-left: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settingsButton:hover {
+    background: var(--neo-yellow);
+}
+
+.settingsButton.settingsActive {
+    background: var(--neo-cyan);
+}
+
+.activeDot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: #ff6b6b;
+    border: 2px solid var(--neo-black);
+    border-radius: 50%;
+}
+
+/* Test Options Dialog */
+.testOptionsDialog {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 2rem;
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dialogSubtitle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.testOptionSection {
+    margin-bottom: 1.25rem;
+}
+
+.testOptionLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+/* Slider with Input */
+.sliderWithInput {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    cursor: pointer;
+}
+
+.delayTextInput {
+    width: 90px;
+    padding: 0.5rem 0.625rem;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0px var(--neo-black);
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.delayTextInput:focus {
+    outline: none;
+    border-color: var(--neo-cyan);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    transform: translate(-1px, -1px);
+}
+
+/* Status Select */
+.statusSelect {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.statusSelect:focus {
+    outline: none;
+    border-color: var(--neo-cyan);
+}
+
+.dialogPrimary {
+    padding: 0.875rem 1.5rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dialogPrimary:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.dialogPrimary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
     .layout {
         grid-template-columns: 1fr;
@@ -948,11 +1124,21 @@
     }
 
     .dialog,
-    .dialogDangerBox {
+    .dialogDangerBox,
+    .testOptionsDialog {
         padding: 1.5rem;
     }
 
     .dialogHeader h2 {
         font-size: 1rem;
+    }
+
+    .sliderWithInput {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .delayTextInput {
+        width: 100%;
     }
 }

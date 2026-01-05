@@ -636,6 +636,37 @@
     text-align: center;
 }
 
+/* Slider with Input Layout */
+.sliderWithInput {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sliderWithInput .slider {
+    flex: 1;
+}
+
+.delayTextInput {
+    width: 90px;
+    padding: 0.5rem 0.625rem;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0px var(--neo-black);
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.delayTextInput:focus {
+    outline: none;
+    border-color: var(--neo-cyan);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    transform: translate(-1px, -1px);
+}
+
 /* Status Select */
 .statusSelect {
     width: 100%;

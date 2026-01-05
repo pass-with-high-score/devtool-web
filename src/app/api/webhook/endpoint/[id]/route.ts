@@ -13,12 +13,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         const body = await request.json();
         const { name, response_delay_ms, response_status_code } = body;
 
-        // Validate test options if provided
+        // Validate test options if provided (max 10 minutes = 600000ms)
         if (response_delay_ms !== undefined) {
             const delay = Number(response_delay_ms);
-            if (isNaN(delay) || delay < 0 || delay > 30000) {
+            if (isNaN(delay) || delay < 0 || delay > 600000) {
                 return NextResponse.json(
-                    { error: 'response_delay_ms must be between 0 and 30000' },
+                    { error: 'response_delay_ms must be between 0 and 600000 (10 minutes)' },
                     { status: 400 }
                 );
             }

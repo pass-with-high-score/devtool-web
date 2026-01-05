@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
         if (endpointId) {
             // Get specific endpoint with its requests
             const [endpoint] = await sql`
-        SELECT id, name, created_at, last_activity 
+        SELECT id, name, created_at, last_activity, response_delay_ms, response_status_code 
         FROM webhook_endpoints 
         WHERE id = ${endpointId}::uuid
       `;

@@ -34,6 +34,60 @@ const STATUS_CODE_OPTIONS = [
     { value: 504, label: '504 - Gateway Timeout', category: 'error' },
 ];
 
+// Max timeout: 10 minutes = 600000ms
+const MAX_TIMEOUT_MS = 600000;
+
+// Helper function to parse timeout value from string
+// Supports: 2000 (ms), "2000ms", "2s", "2m", "2m 14s", "1m 30s"
+const parseTimeoutInput = (value: string): number | null => {
+    if (!value) return 0;
+
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed === '' || trimmed === '0') return 0;
+
+    // Try parsing combined format "2m 14s" or "1m 30s"
+    const combinedMatch = trimmed.match(/^(\d+)\s*m\s+(\d+)\s*s$/);
+    if (combinedMatch) {
+        const mins = parseInt(combinedMatch[1], 10);
+        const secs = parseInt(combinedMatch[2], 10);
+        const ms = (mins * 60 + secs) * 1000;
+        return Math.min(Math.max(0, ms), MAX_TIMEOUT_MS);
+    }
+
+    // Try parsing with single unit suffix
+    const singleMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*(ms|s|m)?$/);
+    if (!singleMatch) return null;
+
+    const num = parseFloat(singleMatch[1]);
+    const unit = singleMatch[2] || 'ms'; // default to milliseconds
+
+    let ms: number;
+    switch (unit) {
+        case 'm':
+            ms = num * 60 * 1000;
+            break;
+        case 's':
+            ms = num * 1000;
+            break;
+        case 'ms':
+        default:
+            ms = num;
+    }
+
+    // Clamp to max timeout
+    return Math.min(Math.max(0, Math.round(ms)), MAX_TIMEOUT_MS);
+};
+
+// Format ms to human readable (e.g., 2000 -> "2s", 130000 -> "2m 10s")
+const formatDelayDisplay = (ms: number): string => {
+    if (ms === 0) return '0ms';
+    if (ms < 1000) return `${ms}ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    const mins = Math.floor(ms / 60000);
+    const secs = Math.round((ms % 60000) / 1000);
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+};
+
 export default function WebhookPage() {
     const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
     const [loading, setLoading] = useState(true);
@@ -46,7 +100,7 @@ export default function WebhookPage() {
     // Test Options Dialog State
     const [showTestOptionsDialog, setShowTestOptionsDialog] = useState(false);
     const [editingTestOptions, setEditingTestOptions] = useState<WebhookEndpoint | null>(null);
-    const [delayInput, setDelayInput] = useState(0);
+    const [delayInputText, setDelayInputText] = useState('0ms');
     const [statusCodeInput, setStatusCodeInput] = useState(200);
     const [savingTestOptions, setSavingTestOptions] = useState(false);
     const { toasts, addToast, removeToast } = useToast();
@@ -242,7 +296,8 @@ export default function WebhookPage() {
     // Test Options Handlers
     const openTestOptionsDialog = (webhook: WebhookEndpoint) => {
         setEditingTestOptions(webhook);
-        setDelayInput(webhook.response_delay_ms || 0);
+        const ms = webhook.response_delay_ms || 0;
+        setDelayInputText(formatDelayDisplay(ms));
         setStatusCodeInput(webhook.response_status_code || 200);
         setShowTestOptionsDialog(true);
     };
@@ -250,13 +305,20 @@ export default function WebhookPage() {
     const handleTestOptionsSubmit = async () => {
         if (!editingTestOptions) return;
 
+        // Parse and validate delay input
+        const parsedDelay = parseTimeoutInput(delayInputText);
+        if (parsedDelay === null) {
+            addToast('Invalid timeout format. Use: 2000, 2s, 2m, etc. Max: 10m', 'error');
+            return;
+        }
+
         setSavingTestOptions(true);
         try {
             const response = await fetch(`/api/webhook/endpoint/${editingTestOptions.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    response_delay_ms: delayInput,
+                    response_delay_ms: parsedDelay,
                     response_status_code: statusCodeInput,
                 }),
             });
@@ -265,7 +327,7 @@ export default function WebhookPage() {
 
             const updatedEndpoints = endpoints.map(e =>
                 e.id === editingTestOptions.id
-                    ? { ...e, response_delay_ms: delayInput, response_status_code: statusCodeInput }
+                    ? { ...e, response_delay_ms: parsedDelay, response_status_code: statusCodeInput }
                     : e
             );
             setEndpoints(updatedEndpoints);
@@ -505,24 +567,26 @@ export default function WebhookPage() {
                                 <span>Response Delay</span>
                             </div>
                             <p className={styles.testOptionDesc}>
-                                Simulate slow response times to test timeout handling
+                                Drag slider or enter exact value (2000, 2s, 2m). Max: 10 minutes.
+                                Override via query param: ?timeout=5s
                             </p>
-                            <div className={styles.sliderContainer}>
+                            <div className={styles.sliderWithInput}>
                                 <input
                                     type="range"
                                     min="0"
-                                    max="30000"
-                                    step="500"
-                                    value={delayInput}
-                                    onChange={(e) => setDelayInput(Number(e.target.value))}
+                                    max="600000"
+                                    step="1000"
+                                    value={parseTimeoutInput(delayInputText) ?? 0}
+                                    onChange={(e) => setDelayInputText(formatDelayDisplay(Number(e.target.value)))}
                                     className={styles.slider}
                                 />
-                                <span className={styles.sliderValue}>
-                                    {delayInput >= 1000
-                                        ? `${(delayInput / 1000).toFixed(1)}s`
-                                        : `${delayInput}ms`
-                                    }
-                                </span>
+                                <input
+                                    type="text"
+                                    value={delayInputText}
+                                    onChange={(e) => setDelayInputText(e.target.value)}
+                                    className={styles.delayTextInput}
+                                    placeholder="0ms"
+                                />
                             </div>
                         </div>
 

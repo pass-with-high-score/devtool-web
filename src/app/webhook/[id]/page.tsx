@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon, XIcon, AlertIcon, DownloadIcon, ArrowLeftIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon, XIcon, AlertIcon, DownloadIcon, ArrowLeftIcon, SettingsIcon, ClockIcon, AlertCircleIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Language definitions with their variants
@@ -24,6 +24,64 @@ const LANGUAGE_CONFIG = {
 } as const;
 
 type LanguageKey = keyof typeof LANGUAGE_CONFIG;
+
+// Max timeout: 10 minutes = 600000ms
+const MAX_TIMEOUT_MS = 600000;
+
+// Status code options for test options
+const STATUS_CODE_OPTIONS = [
+    { value: 200, label: '200 - OK' },
+    { value: 201, label: '201 - Created' },
+    { value: 400, label: '400 - Bad Request' },
+    { value: 401, label: '401 - Unauthorized' },
+    { value: 403, label: '403 - Forbidden' },
+    { value: 404, label: '404 - Not Found' },
+    { value: 429, label: '429 - Too Many Requests' },
+    { value: 500, label: '500 - Internal Server Error' },
+    { value: 502, label: '502 - Bad Gateway' },
+    { value: 503, label: '503 - Service Unavailable' },
+    { value: 504, label: '504 - Gateway Timeout' },
+];
+
+// Parse timeout value from string
+// Supports: 2000 (ms), "2000ms", "2s", "2m", "2m 14s", "1m 30s"
+const parseTimeoutInput = (value: string): number | null => {
+    if (!value) return 0;
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed === '' || trimmed === '0') return 0;
+
+    // Try parsing combined format "2m 14s" or "1m 30s"
+    const combinedMatch = trimmed.match(/^(\d+)\s*m\s+(\d+)\s*s$/);
+    if (combinedMatch) {
+        const mins = parseInt(combinedMatch[1], 10);
+        const secs = parseInt(combinedMatch[2], 10);
+        const ms = (mins * 60 + secs) * 1000;
+        return Math.min(Math.max(0, ms), MAX_TIMEOUT_MS);
+    }
+
+    // Try parsing with single unit suffix
+    const singleMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*(ms|s|m)?$/);
+    if (!singleMatch) return null;
+    const num = parseFloat(singleMatch[1]);
+    const unit = singleMatch[2] || 'ms';
+    let ms: number;
+    switch (unit) {
+        case 'm': ms = num * 60 * 1000; break;
+        case 's': ms = num * 1000; break;
+        default: ms = num;
+    }
+    return Math.min(Math.max(0, Math.round(ms)), MAX_TIMEOUT_MS);
+};
+
+// Format ms to human readable
+const formatDelayDisplay = (ms: number): string => {
+    if (ms === 0) return '0ms';
+    if (ms < 1000) return `${ms}ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    const mins = Math.floor(ms / 60000);
+    const secs = Math.round((ms % 60000) / 1000);
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+};
 
 interface WebhookRequest {
     id: number;
@@ -63,6 +121,33 @@ export default function WebhookDetailPage({ params }: PageProps) {
     // Set the full URL on client side to avoid hydration mismatch
     useEffect(() => {
         setWebhookUrl(`${window.location.origin}/api/hook/${id}`);
+    }, [id]);
+
+    // Test Options states
+    const [showTestOptionsDialog, setShowTestOptionsDialog] = useState(false);
+    const [delayInputText, setDelayInputText] = useState('0ms');
+    const [statusCodeInput, setStatusCodeInput] = useState(200);
+    const [savingTestOptions, setSavingTestOptions] = useState(false);
+    const [currentTestOptions, setCurrentTestOptions] = useState({ delay: 0, statusCode: 200 });
+
+    // Load current test options
+    useEffect(() => {
+        const loadTestOptions = async () => {
+            try {
+                const response = await fetch(`/api/webhook?id=${id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.endpoint) {
+                        const delay = data.endpoint.response_delay_ms || 0;
+                        const status = data.endpoint.response_status_code || 200;
+                        setCurrentTestOptions({ delay, statusCode: status });
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load test options:', e);
+            }
+        };
+        loadTestOptions();
     }, [id]);
 
     // Helper to parse JSON fields that might be strings
@@ -517,6 +602,46 @@ export default function WebhookDetailPage({ params }: PageProps) {
         }
     };
 
+    // Test Options Handlers
+    const openTestOptionsDialog = () => {
+        setDelayInputText(formatDelayDisplay(currentTestOptions.delay));
+        setStatusCodeInput(currentTestOptions.statusCode);
+        setShowTestOptionsDialog(true);
+    };
+
+    const handleTestOptionsSubmit = async () => {
+        const parsedDelay = parseTimeoutInput(delayInputText);
+        if (parsedDelay === null) {
+            addToast('Invalid timeout format. Use: 2000, 2s, 2m. Max: 10m', 'error');
+            return;
+        }
+
+        setSavingTestOptions(true);
+        try {
+            const response = await fetch(`/api/webhook/endpoint/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    response_delay_ms: parsedDelay,
+                    response_status_code: statusCodeInput,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Failed to update test options');
+
+            setCurrentTestOptions({ delay: parsedDelay, statusCode: statusCodeInput });
+            addToast('Test options updated', 'success');
+            setShowTestOptionsDialog(false);
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to update test options', 'error');
+        } finally {
+            setSavingTestOptions(false);
+        }
+    };
+
+    const hasActiveTestOptions = currentTestOptions.delay > 0 || currentTestOptions.statusCode !== 200;
+
     return (
         <div className={styles.container}>
             <div className={styles.backgroundGradient}></div>
@@ -537,6 +662,16 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     />
                     <button onClick={copyUrl} className={styles.copyButton}>
                         {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
+                    </button>
+                    <button
+                        onClick={openTestOptionsDialog}
+                        className={`${styles.settingsButton} ${hasActiveTestOptions ? styles.settingsActive : ''}`}
+                        title="Test Options"
+                    >
+                        <SettingsIcon size={18} />
+                        {hasActiveTestOptions && (
+                            <span className={styles.activeDot}></span>
+                        )}
                     </button>
                     <button onClick={() => setShowDeleteDialog(true)} className={styles.dangerButton} title="Delete Endpoint">
                         <TrashIcon size={18} />
@@ -1025,6 +1160,80 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     </div>
                 )
             }
+
+            {/* Test Options Dialog */}
+            {showTestOptionsDialog && (
+                <div className={styles.dialogOverlay} onClick={() => setShowTestOptionsDialog(false)}>
+                    <div className={styles.testOptionsDialog} onClick={e => e.stopPropagation()}>
+                        <button className={styles.dialogClose} onClick={() => setShowTestOptionsDialog(false)}>
+                            <XIcon size={24} />
+                        </button>
+                        <div className={styles.dialogHeader}>
+                            <SettingsIcon size={28} />
+                            <h2>Test Options</h2>
+                        </div>
+                        <p className={styles.dialogSubtitle}>
+                            Configure how this webhook responds. Override via query params: ?timeout=5s&status=500
+                        </p>
+
+                        <div className={styles.testOptionSection}>
+                            <div className={styles.testOptionLabel}>
+                                <ClockIcon size={16} />
+                                <span>Response Delay</span>
+                            </div>
+                            <div className={styles.sliderWithInput}>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="600000"
+                                    step="1000"
+                                    value={parseTimeoutInput(delayInputText) ?? 0}
+                                    onChange={(e) => setDelayInputText(formatDelayDisplay(Number(e.target.value)))}
+                                    className={styles.slider}
+                                />
+                                <input
+                                    type="text"
+                                    value={delayInputText}
+                                    onChange={(e) => setDelayInputText(e.target.value)}
+                                    className={styles.delayTextInput}
+                                    placeholder="0ms"
+                                />
+                            </div>
+                        </div>
+
+                        <div className={styles.testOptionSection}>
+                            <div className={styles.testOptionLabel}>
+                                <AlertCircleIcon size={16} />
+                                <span>Response Status Code</span>
+                            </div>
+                            <select
+                                value={statusCodeInput}
+                                onChange={(e) => setStatusCodeInput(Number(e.target.value))}
+                                className={styles.statusSelect}
+                            >
+                                {STATUS_CODE_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className={styles.dialogActions}>
+                            <button
+                                onClick={handleTestOptionsSubmit}
+                                className={styles.dialogPrimary}
+                                disabled={savingTestOptions}
+                            >
+                                {savingTestOptions ? 'Saving...' : 'Save Options'}
+                            </button>
+                            <button onClick={() => setShowTestOptionsDialog(false)} className={styles.dialogSecondary}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

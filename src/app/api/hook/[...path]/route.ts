@@ -12,6 +12,49 @@ async function handleWebhook(request: NextRequest, { params }: RouteParams) {
     const endpointId = path[0];
     const pathParams = path.slice(1);
 
+    // Max timeout: 10 minutes = 600000ms
+    const MAX_TIMEOUT_MS = 600000;
+
+    // Helper function to parse timeout value from string
+    // Supports: 2000 (ms), "2000ms", "2s", "2m", "2m 14s", "1m 30s"
+    const parseTimeout = (value: string | null): number | null => {
+        if (!value) return null;
+
+        const trimmed = value.trim().toLowerCase();
+
+        // Try parsing combined format "2m 14s" or "1m 30s"
+        const combinedMatch = trimmed.match(/^(\d+)\s*m\s+(\d+)\s*s$/);
+        if (combinedMatch) {
+            const mins = parseInt(combinedMatch[1], 10);
+            const secs = parseInt(combinedMatch[2], 10);
+            const ms = (mins * 60 + secs) * 1000;
+            return Math.min(Math.max(0, ms), MAX_TIMEOUT_MS);
+        }
+
+        // Try parsing with single unit suffix
+        const singleMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*(ms|s|m)?$/);
+        if (!singleMatch) return null;
+
+        const num = parseFloat(singleMatch[1]);
+        const unit = singleMatch[2] || 'ms'; // default to milliseconds
+
+        let ms: number;
+        switch (unit) {
+            case 'm':
+                ms = num * 60 * 1000;
+                break;
+            case 's':
+                ms = num * 1000;
+                break;
+            case 'ms':
+            default:
+                ms = num;
+        }
+
+        // Clamp to max timeout
+        return Math.min(Math.max(0, Math.round(ms)), MAX_TIMEOUT_MS);
+    };
+
     try {
         // Verify endpoint exists and get test options
         const [endpoint] = await sql`
@@ -83,19 +126,30 @@ async function handleWebhook(request: NextRequest, { params }: RouteParams) {
       WHERE id = ${endpointId}::uuid
     `;
 
-        // Apply response delay if configured
-        const delayMs = endpoint.response_delay_ms || 0;
+        // Determine delay: query param takes priority over saved setting
+        const timeoutParam = request.nextUrl.searchParams.get('timeout');
+        const parsedTimeout = parseTimeout(timeoutParam);
+        const delayMs = parsedTimeout !== null ? parsedTimeout : (endpoint.response_delay_ms || 0);
+
         if (delayMs > 0) {
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
 
-        // Return with configured status code
-        const statusCode = endpoint.response_status_code || 200;
+        // Determine status code: query param takes priority over saved setting
+        const statusParam = request.nextUrl.searchParams.get('status');
+        const parsedStatus = statusParam ? parseInt(statusParam, 10) : null;
+        const validCodes = [200, 201, 400, 401, 403, 404, 429, 500, 502, 503, 504];
+        const statusCode = (parsedStatus && validCodes.includes(parsedStatus))
+            ? parsedStatus
+            : (endpoint.response_status_code || 200);
+
         return NextResponse.json(
             {
                 success: statusCode >= 200 && statusCode < 300,
                 request_id: newRequest.id,
                 message: 'Webhook received',
+                applied_delay_ms: delayMs,
+                applied_status_code: statusCode,
             },
             { status: statusCode }
         );
