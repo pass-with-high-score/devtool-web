@@ -31,6 +31,7 @@ export default function WebhookDetailPage({ params }: PageProps) {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [methodFilter, setMethodFilter] = useState<string>('ALL');
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+    const [searchQuery, setSearchQuery] = useState('');
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
 
@@ -140,6 +141,14 @@ export default function WebhookDetailPage({ params }: PageProps) {
     // Filter and sort requests
     const filteredRequests = requests
         .filter(r => methodFilter === 'ALL' || r.method === methodFilter)
+        .filter(r => {
+            if (!searchQuery.trim()) return true;
+            const query = searchQuery.toLowerCase();
+            const headers = JSON.stringify(parseJsonField(r.headers)).toLowerCase();
+            const body = (r.body || '').toLowerCase();
+            const queryParams = JSON.stringify(parseJsonField(r.query_params)).toLowerCase();
+            return headers.includes(query) || body.includes(query) || queryParams.includes(query);
+        })
         .sort((a, b) => {
             const dateA = new Date(a.created_at).getTime();
             const dateB = new Date(b.created_at).getTime();
@@ -252,6 +261,13 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                         <option key={method} value={method}>{method}</option>
                                     ))}
                                 </select>
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className={styles.searchInput}
+                                />
                                 <button
                                     onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
                                     className={styles.sortButton}
