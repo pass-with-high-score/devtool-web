@@ -1,106 +1,46 @@
-# Subdomain Scanner
+# DevTools
 
-A comprehensive subdomain enumeration tool that aggregates data from multiple sources to discover, resolve, and analyze subdomains.
+Free online developer tools. No signup required, 100% client-side processing.
 
-## Features
+## Tools
 
-- **Multi-Source Discovery**
-  - **Certificate Transparency Logs**: Fetches historical data from crt.sh
-  - **VirusTotal**: Passive DNS lookup (API key integration)
-  - **Shodan**: Subdomain discovery and host information
-  - **Subfinder**: Integration with ProjectDiscovery's CLI tool
-- **Deep Analysis**
-  - **DNS Resolution**: High-concurrency A record resolution
-  - **Cloudflare Detection**: Identifies protection status via IP CIDR
-  - **Port Scanning**: Passive port detection via Shodan
-- **Professional UI**
-  - **Neo-Brutalism Design**: High-contrast, bold aesthetics
-  - **Interactive Table**: Sortable, filterable columns
-  - **Export Capabilities**: JSON export for external processing
+- **Subdomain Scanner** - Discover subdomains using CT logs, VirusTotal, Shodan, Subfinder
+- **OTP Generator** - Generate TOTP codes with key saving and password protection
+- **Base64 Image** - View/encode images to Base64 with drag & drop
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js 18+
-- Go (optional, for Subfinder)
-
-### Installation
-
 ```bash
-git clone https://github.com/pass-with-high-score/check-subdomain.git
-cd check-subdomain
+# Install
 npm install
-```
 
-### Setup Subfinder (Optional)
-
-To enable the Subfinder integration, install the CLI tool:
-
-```bash
-# Using Go (Recommended)
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-
-# Using Homebrew (macOS)
-brew install subfinder
-```
-
-### Running the Application
-
-```bash
+# Run
 npm run dev
-# Server starting at http://localhost:3000
 ```
 
-## API Configuration
+Open http://localhost:3000
 
-To unlock full capabilities, configure your API keys in the UI Settings panel:
+## Environment Variables
 
-1. **VirusTotal Key**: Get free key from [virustotal.com](https://www.virustotal.com/)
-2. **Shodan Key**: Get free key from [shodan.io](https://shodan.io/)
+```env
+# VirusTotal API Key (free tier: 4 requests/minute)
+# Get yours at: https://www.virustotal.com/gui/sign-in
+VIRUSTOTAL_API_KEY=
 
-The application works fully without keys, relying on CT logs and Subfinder (if installed).
+# Shodan API Key (free tier: 100 credits/month)
+# Get yours at: https://account.shodan.io
+SHODAN_API_KEY=
 
-## API Reference
-
-### Endpoint: `POST /api/scan`
-
-**Request Body**
-```json
-{
-  "domain": "example.com",
-  "virustotalApiKey": "optional_key",
-  "shodanApiKey": "optional_key",
-  "enableSubfinder": true
-}
+# Base URL (e.g. https://yourdomain.com)
+NEXT_PUBLIC_BASE_URL=https://yourdomain.com
 ```
 
-**Response**
-```json
-{
-  "scan_date": "2026-01-05 10:00:00",
-  "domain": "example.com",
-  "stats": {
-    "total": 150,
-    "cloudflare": 45,
-    "sources": {
-      "crtsh": 120,
-      "virustotal": 80,
-      "subfinder": 100
-    }
-  },
-  "subdomains": [
-    {
-      "subdomain": "admin.example.com",
-      "ip": "1.2.3.4",
-      "cloudflare": false,
-      "ports": [80, 443],
-      "source": ["crtsh", "virustotal"]
-    }
-  ]
-}
-```
+## API Keys (Optional)
+
+Configure in UI Settings panel:
+- **VirusTotal** - [virustotal.com](https://www.virustotal.com/)
+- **Shodan** - [shodan.io](https://shodan.io/)
 
 ## License
 
-MIT License
+MIT
