@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon, XIcon, AlertIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface WebhookRequest {
@@ -27,6 +27,8 @@ export default function WebhookDetailPage({ params }: PageProps) {
     const [selectedRequest, setSelectedRequest] = useState<WebhookRequest | null>(null);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [showClearDialog, setShowClearDialog] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
 
@@ -157,6 +159,36 @@ export default function WebhookDetailPage({ params }: PageProps) {
         }
     };
 
+    const clearAllRequests = async () => {
+        setShowClearDialog(false);
+        try {
+            const response = await fetch(`/api/webhook/${id}/requests`, { method: 'DELETE' });
+            if (response.ok) {
+                setRequests([]);
+                setSelectedRequest(null);
+                addToast('All requests cleared', 'success');
+            }
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to clear', 'error');
+        }
+    };
+
+    const deleteEndpoint = async () => {
+        setShowDeleteDialog(false);
+        try {
+            const response = await fetch(`/api/webhook/endpoint/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                localStorage.removeItem('webhook-endpoint');
+                addToast('Endpoint deleted', 'success');
+                router.push('/webhook');
+            }
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to delete endpoint', 'error');
+        }
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.backgroundGradient}></div>
@@ -175,6 +207,9 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     <button onClick={copyUrl} className={styles.copyButton}>
                         {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
                     </button>
+                    <button onClick={() => setShowDeleteDialog(true)} className={styles.dangerButton} title="Delete Endpoint">
+                        <TrashIcon size={18} />
+                    </button>
                 </div>
             </header>
 
@@ -184,6 +219,11 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     <div className={styles.requestList}>
                         <div className={styles.listHeader}>
                             <h2>Requests ({requests.length})</h2>
+                            {requests.length > 0 && (
+                                <button onClick={() => setShowClearDialog(true)} className={styles.clearButton}>
+                                    Clear
+                                </button>
+                            )}
                         </div>
 
                         {loading ? (
@@ -293,6 +333,62 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     </div>
                 </div>
             </main>
+
+            {/* Clear All Dialog */}
+            {showClearDialog && (
+                <div className={styles.dialogOverlay} onClick={() => setShowClearDialog(false)}>
+                    <div className={styles.dialog} onClick={e => e.stopPropagation()}>
+                        <button className={styles.dialogClose} onClick={() => setShowClearDialog(false)}>
+                            <XIcon size={24} />
+                        </button>
+                        <div className={styles.dialogHeader}>
+                            <AlertIcon size={28} />
+                            <h2>Clear All Requests?</h2>
+                        </div>
+                        <p className={styles.dialogText}>
+                            This will delete all {requests.length} requests from this endpoint.
+                        </p>
+                        <div className={styles.dialogActions}>
+                            <button onClick={clearAllRequests} className={styles.dialogDanger}>
+                                Yes, Clear All
+                            </button>
+                            <button onClick={() => setShowClearDialog(false)} className={styles.dialogSecondary}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Endpoint Dialog */}
+            {showDeleteDialog && (
+                <div className={styles.dialogOverlay} onClick={() => setShowDeleteDialog(false)}>
+                    <div className={styles.dialogDangerBox} onClick={e => e.stopPropagation()}>
+                        <button className={styles.dialogClose} onClick={() => setShowDeleteDialog(false)}>
+                            <XIcon size={24} />
+                        </button>
+                        <div className={styles.dialogHeader}>
+                            <TrashIcon size={28} />
+                            <h2>Delete Endpoint?</h2>
+                        </div>
+                        <div className={styles.warningBox}>
+                            <p><strong>Warning:</strong> This action cannot be undone!</p>
+                            <ul>
+                                <li>The webhook URL will stop working</li>
+                                <li>All requests will be permanently deleted</li>
+                            </ul>
+                        </div>
+                        <div className={styles.dialogActions}>
+                            <button onClick={deleteEndpoint} className={styles.dialogDanger}>
+                                Yes, Delete Endpoint
+                            </button>
+                            <button onClick={() => setShowDeleteDialog(false)} className={styles.dialogSecondary}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -5,22 +5,21 @@ interface RouteParams {
     params: Promise<{ id: string }>;
 }
 
-// DELETE: Remove a specific webhook request
+// DELETE: Delete entire endpoint and all its requests
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-    const { id: requestId } = await params;
+    const { id: endpointId } = await params;
 
     try {
         await sql`
-            DELETE FROM webhook_requests WHERE id = ${parseInt(requestId)}
+            DELETE FROM webhook_endpoints WHERE id = ${endpointId}::uuid
         `;
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Failed to delete request:', error);
+        console.error('Failed to delete endpoint:', error);
         return NextResponse.json(
-            { error: 'Failed to delete request' },
+            { error: 'Failed to delete endpoint' },
             { status: 500 }
         );
     }
 }
-
