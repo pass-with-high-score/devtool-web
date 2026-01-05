@@ -14,6 +14,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const stream = new ReadableStream({
         async start(controller) {
+            let closed = false;
+
             // Verify endpoint exists
             const [endpoint] = await sql`
                 SELECT id FROM webhook_endpoints WHERE id = ${endpointId}::uuid
@@ -45,6 +47,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
             // Poll for new requests every second
             const interval = setInterval(async () => {
+                if (closed) return;
+
                 try {
                     const newRequests = await sql`
                         SELECT id, method, headers, body, query_params, content_length, created_at
@@ -55,11 +59,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
                     if (newRequests.length > 0) {
                         lastId = Math.max(...newRequests.map(r => r.id as number));
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'new', requests: newRequests })}\n\n`));
+                        if (!closed) {
+                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'new', requests: newRequests })}\n\n`));
+                        }
                     }
 
                     // Send heartbeat to keep connection alive
-                    controller.enqueue(encoder.encode(`: heartbeat\n\n`));
+                    if (!closed) {
+                        controller.enqueue(encoder.encode(`: heartbeat\n\n`));
+                    }
                 } catch (error) {
                     console.error('SSE error:', error);
                 }
@@ -67,8 +75,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
             // Cleanup on close
             request.signal.addEventListener('abort', () => {
+                closed = true;
                 clearInterval(interval);
-                controller.close();
             });
         },
     });

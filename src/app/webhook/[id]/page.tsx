@@ -91,15 +91,27 @@ export default function WebhookDetailPage({ params }: PageProps) {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    // Parse timestamp from PostgreSQL (UTC) to local time
+    const parseTimestamp = (dateStr: string) => {
+        // PostgreSQL returns timestamps without timezone info
+        // Append 'Z' to indicate UTC if not already present
+        const utcStr = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+        return new Date(utcStr);
+    };
+
     const formatTime = (dateStr: string) => {
-        const date = new Date(dateStr);
+        const date = parseTimestamp(dateStr);
         const now = new Date();
         const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-        if (diff < 60) return `${diff}s ago`;
+        if (diff < 60) return `${Math.max(0, diff)}s ago`;
         if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
         if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
         return date.toLocaleDateString();
+    };
+
+    const formatFullTime = (dateStr: string) => {
+        return parseTimestamp(dateStr).toLocaleString();
     };
 
     const formatSize = (bytes: number) => {
@@ -182,7 +194,7 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                     <span className={`${styles.method} ${getMethodColor(selectedRequest.method)}`}>
                                         {selectedRequest.method}
                                     </span>
-                                    <span>{new Date(selectedRequest.created_at).toLocaleString()}</span>
+                                    <span>{formatFullTime(selectedRequest.created_at)}</span>
                                 </div>
 
                                 <div className={styles.section}>
