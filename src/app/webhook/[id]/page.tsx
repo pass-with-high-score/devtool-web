@@ -29,6 +29,8 @@ export default function WebhookDetailPage({ params }: PageProps) {
     const [copied, setCopied] = useState(false);
     const [showClearDialog, setShowClearDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [methodFilter, setMethodFilter] = useState<string>('ALL');
+    const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
     const { toasts, addToast, removeToast } = useToast();
     const router = useRouter();
 
@@ -132,6 +134,18 @@ export default function WebhookDetailPage({ params }: PageProps) {
         }
     };
 
+    // Get unique methods from requests
+    const availableMethods = ['ALL', ...new Set(requests.map(r => r.method))];
+
+    // Filter and sort requests
+    const filteredRequests = requests
+        .filter(r => methodFilter === 'ALL' || r.method === methodFilter)
+        .sort((a, b) => {
+            const dateA = new Date(a.created_at).getTime();
+            const dateB = new Date(b.created_at).getTime();
+            return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+        });
+
     const copyBody = async () => {
         if (!selectedRequest?.body) return;
         try {
@@ -218,13 +232,34 @@ export default function WebhookDetailPage({ params }: PageProps) {
                     {/* Request List */}
                     <div className={styles.requestList}>
                         <div className={styles.listHeader}>
-                            <h2>Requests ({requests.length})</h2>
+                            <h2>Requests ({filteredRequests.length}/{requests.length})</h2>
                             {requests.length > 0 && (
                                 <button onClick={() => setShowClearDialog(true)} className={styles.clearButton}>
                                     Clear
                                 </button>
                             )}
                         </div>
+
+                        {/* Filters */}
+                        {requests.length > 0 && (
+                            <div className={styles.filterRow}>
+                                <select
+                                    value={methodFilter}
+                                    onChange={(e) => setMethodFilter(e.target.value)}
+                                    className={styles.filterSelect}
+                                >
+                                    {availableMethods.map(method => (
+                                        <option key={method} value={method}>{method}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+                                    className={styles.sortButton}
+                                >
+                                    {sortOrder === 'newest' ? '↓ Newest' : '↑ Oldest'}
+                                </button>
+                            </div>
+                        )}
 
                         {loading ? (
                             <div className={styles.loading}>Loading...</div>
@@ -234,9 +269,13 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                 <p>No requests yet</p>
                                 <span>Send a request to your webhook URL</span>
                             </div>
+                        ) : filteredRequests.length === 0 ? (
+                            <div className={styles.empty}>
+                                <p>No {methodFilter} requests</p>
+                            </div>
                         ) : (
                             <div className={styles.list}>
-                                {requests.map((req) => (
+                                {filteredRequests.map((req) => (
                                     <button
                                         key={req.id}
                                         className={`${styles.requestItem} ${selectedRequest?.id === req.id ? styles.selected : ''}`}
