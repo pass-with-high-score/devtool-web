@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import SubdomainTable from '@/components/SubdomainTable';
-import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, GithubIcon } from '@/components/Icons';
+import { SearchIcon, BoltIcon, AlertIcon, DownloadIcon, GithubIcon, WarningIcon, GlobeIcon, ServerIcon, StarIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface ScanResult {
@@ -11,6 +11,12 @@ interface ScanResult {
   cloudflare: boolean;
   ports?: number[];
   source?: string[];
+  http?: {
+    status: number | null;
+    server: string | null;
+    tech: string[];
+    url: string | null;
+  };
 }
 
 interface SourceStats {
@@ -24,11 +30,19 @@ interface SourceStats {
 interface ScanResponse {
   scan_date: string;
   domain: string;
+  wildcard: boolean;
   stats: {
     total: number;
     cloudflare: number;
     no_ip: number;
     sources?: SourceStats;
+    http?: {
+      alive: number;
+      status_200: number;
+      status_403: number;
+      status_404: number;
+      status_500: number;
+    };
   };
   subdomains: ScanResult[];
 }
@@ -211,6 +225,21 @@ export default function Home() {
       {/* Results */}
       {result && (
         <div className={styles.results}>
+          {/* Wildcard Warning */}
+          {result.wildcard && (
+            <div className={styles.wildcardWarning}>
+              <div className={styles.wildcardHeader}>
+                <WarningIcon size={24} />
+                <h3>Wildcard DNS Detected</h3>
+              </div>
+              <p>
+                A wildcard DNS record (*.{result.domain}) is enabled.
+                This means ANY subdomain will resolve to an IP address.
+                Results may contain false positives.
+              </p>
+            </div>
+          )}
+
           {/* Stats Cards */}
           <div className={styles.statsGrid}>
             <div className={styles.statCard}>

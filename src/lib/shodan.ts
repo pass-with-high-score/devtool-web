@@ -6,6 +6,8 @@
  * Rate Limit: 1 credit/query, 100 credits/month (free)
  */
 
+import { Socket } from 'net';
+
 interface ShodanDNSResponse {
     domain: string;
     tags: string[];
@@ -136,4 +138,51 @@ export async function batchGetPorts(
 
     console.log(`[Shodan] Retrieved port info for ${results.size} IPs`);
     return results;
+}
+
+/**
+ * Active Port Probing
+ * Uses net.Socket to check if common ports are open
+ */
+const COMMON_PORTS = [80, 443, 8080, 8443, 3000, 8888, 22];
+
+export async function probePort(ip: string, port: number, timeout = 2000): Promise<boolean> {
+    return new Promise((resolve) => {
+        const socket = new Socket();
+        let status = false;
+
+        socket.setTimeout(timeout);
+
+        socket.on('connect', () => {
+            status = true;
+            socket.destroy();
+        });
+
+        socket.on('timeout', () => {
+            socket.destroy();
+        });
+
+        socket.on('error', () => {
+            socket.destroy();
+        });
+
+        socket.on('close', () => {
+            resolve(status);
+        });
+
+        socket.connect(port, ip);
+    });
+}
+
+export async function batchActiveProbe(ip: string): Promise<number[]> {
+    const openPorts: number[] = [];
+
+    // Probe all common ports in parallel
+    const promises = COMMON_PORTS.map(async (port) => {
+        const isOpen = await probePort(ip, port);
+        if (isOpen) openPorts.push(port);
+    });
+
+    await Promise.all(promises);
+    return openPorts.sort((a, b) => a - b);
 }
