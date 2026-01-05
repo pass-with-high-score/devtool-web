@@ -5,25 +5,25 @@
     z-index: 9999;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    max-width: 320px;
 }
 
 .toast {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
     background: var(--neo-black);
-    border: 4px solid var(--neo-black);
-    box-shadow: 6px 6px 0px var(--neo-black);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
     color: var(--neo-white);
     font-family: 'Lexend Mega', sans-serif;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     cursor: pointer;
     animation: slideIn 0.2s ease-out;
-    min-width: 200px;
 }
 
 .toastSuccess {
@@ -46,12 +46,15 @@
 }
 
 .toastIcon {
-    font-size: 1.25rem;
-    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .toastMessage {
     flex: 1;
+    line-height: 1.2;
 }
 
 @keyframes slideIn {
@@ -78,15 +81,30 @@
     }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Mobile - Smaller, more compact toast */
+@media (max-width: 600px) {
     .toastContainer {
-        left: 1rem;
-        right: 1rem;
         bottom: 1rem;
+        right: 1rem;
+        left: auto;
+        max-width: calc(100vw - 2rem);
     }
 
     .toast {
-        min-width: auto;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.65rem;
+        border-width: 2px;
+        box-shadow: 3px 3px 0px var(--neo-black);
+        gap: 0.4rem;
+    }
+
+    .toastIcon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .toastIcon svg {
+        width: 14px;
+        height: 14px;
     }
 }
