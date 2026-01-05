@@ -292,17 +292,33 @@ export default function WebhookDetailPage({ params }: PageProps) {
                         ) : (
                             <div className={styles.list}>
                                 {filteredRequests.map((req) => (
-                                    <button
+                                    <div
                                         key={req.id}
                                         className={`${styles.requestItem} ${selectedRequest?.id === req.id ? styles.selected : ''}`}
-                                        onClick={() => setSelectedRequest(req)}
                                     >
-                                        <span className={`${styles.method} ${getMethodColor(req.method)}`}>
-                                            {req.method}
-                                        </span>
-                                        <span className={styles.time}>{formatTime(req.created_at)}</span>
-                                        <span className={styles.size}>{formatSize(req.content_length)}</span>
-                                    </button>
+                                        <button
+                                            className={styles.requestItemContent}
+                                            onClick={() => setSelectedRequest(req)}
+                                        >
+                                            <span className={`${styles.method} ${getMethodColor(req.method)}`}>
+                                                {req.method}
+                                            </span>
+                                            <span className={styles.time}>{formatTime(req.created_at)}</span>
+                                            <span className={styles.size}>{formatSize(req.content_length)}</span>
+                                        </button>
+                                        {selectedRequest?.id === req.id && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    deleteRequest(req.id);
+                                                }}
+                                                className={styles.deleteItemButton}
+                                                title="Delete request"
+                                            >
+                                                <TrashIcon size={14} />
+                                            </button>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -317,13 +333,6 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                         {selectedRequest.method}
                                     </span>
                                     <span className={styles.timestamp}>{formatFullTime(selectedRequest.created_at)}</span>
-                                    <button
-                                        onClick={() => deleteRequest(selectedRequest.id)}
-                                        className={styles.deleteButton}
-                                        title="Delete request"
-                                    >
-                                        <TrashIcon size={16} />
-                                    </button>
                                 </div>
 
                                 <div className={styles.section}>
@@ -406,63 +415,67 @@ export default function WebhookDetailPage({ params }: PageProps) {
                         )}
                     </div>
                 </div>
-            </main>
+            </main >
 
             {/* Clear All Dialog */}
-            {showClearDialog && (
-                <div className={styles.dialogOverlay} onClick={() => setShowClearDialog(false)}>
-                    <div className={styles.dialog} onClick={e => e.stopPropagation()}>
-                        <button className={styles.dialogClose} onClick={() => setShowClearDialog(false)}>
-                            <XIcon size={24} />
-                        </button>
-                        <div className={styles.dialogHeader}>
-                            <AlertIcon size={28} />
-                            <h2>Clear All Requests?</h2>
-                        </div>
-                        <p className={styles.dialogText}>
-                            This will delete all {requests.length} requests from this endpoint.
-                        </p>
-                        <div className={styles.dialogActions}>
-                            <button onClick={clearAllRequests} className={styles.dialogDanger}>
-                                Yes, Clear All
+            {
+                showClearDialog && (
+                    <div className={styles.dialogOverlay} onClick={() => setShowClearDialog(false)}>
+                        <div className={styles.dialog} onClick={e => e.stopPropagation()}>
+                            <button className={styles.dialogClose} onClick={() => setShowClearDialog(false)}>
+                                <XIcon size={24} />
                             </button>
-                            <button onClick={() => setShowClearDialog(false)} className={styles.dialogSecondary}>
-                                Cancel
-                            </button>
+                            <div className={styles.dialogHeader}>
+                                <AlertIcon size={28} />
+                                <h2>Clear All Requests?</h2>
+                            </div>
+                            <p className={styles.dialogText}>
+                                This will delete all {requests.length} requests from this endpoint.
+                            </p>
+                            <div className={styles.dialogActions}>
+                                <button onClick={clearAllRequests} className={styles.dialogDanger}>
+                                    Yes, Clear All
+                                </button>
+                                <button onClick={() => setShowClearDialog(false)} className={styles.dialogSecondary}>
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Delete Endpoint Dialog */}
-            {showDeleteDialog && (
-                <div className={styles.dialogOverlay} onClick={() => setShowDeleteDialog(false)}>
-                    <div className={styles.dialogDangerBox} onClick={e => e.stopPropagation()}>
-                        <button className={styles.dialogClose} onClick={() => setShowDeleteDialog(false)}>
-                            <XIcon size={24} />
-                        </button>
-                        <div className={styles.dialogHeader}>
-                            <TrashIcon size={28} />
-                            <h2>Delete Endpoint?</h2>
-                        </div>
-                        <div className={styles.warningBox}>
-                            <p><strong>Warning:</strong> This action cannot be undone!</p>
-                            <ul>
-                                <li>The webhook URL will stop working</li>
-                                <li>All requests will be permanently deleted</li>
-                            </ul>
-                        </div>
-                        <div className={styles.dialogActions}>
-                            <button onClick={deleteEndpoint} className={styles.dialogDanger}>
-                                Yes, Delete Endpoint
+            {
+                showDeleteDialog && (
+                    <div className={styles.dialogOverlay} onClick={() => setShowDeleteDialog(false)}>
+                        <div className={styles.dialogDangerBox} onClick={e => e.stopPropagation()}>
+                            <button className={styles.dialogClose} onClick={() => setShowDeleteDialog(false)}>
+                                <XIcon size={24} />
                             </button>
-                            <button onClick={() => setShowDeleteDialog(false)} className={styles.dialogSecondary}>
-                                Cancel
-                            </button>
+                            <div className={styles.dialogHeader}>
+                                <TrashIcon size={28} />
+                                <h2>Delete Endpoint?</h2>
+                            </div>
+                            <div className={styles.warningBox}>
+                                <p><strong>Warning:</strong> This action cannot be undone!</p>
+                                <ul>
+                                    <li>The webhook URL will stop working</li>
+                                    <li>All requests will be permanently deleted</li>
+                                </ul>
+                            </div>
+                            <div className={styles.dialogActions}>
+                                <button onClick={deleteEndpoint} className={styles.dialogDanger}>
+                                    Yes, Delete Endpoint
+                                </button>
+                                <button onClick={() => setShowDeleteDialog(false)} className={styles.dialogSecondary}>
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
