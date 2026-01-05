@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -36,6 +36,13 @@ const tools: Tool[] = [
         description: 'View Base64 encoded images or convert images to Base64 strings with drag & drop.',
         icon: <ImageIcon size={32} />,
         color: 'pink',
+    },
+    {
+        href: '/webhook',
+        title: 'Webhook Tester',
+        description: 'Receive and inspect webhook requests in real-time from any service.',
+        icon: <LinkIcon size={32} />,
+        color: 'yellow',
     },
 ];
 

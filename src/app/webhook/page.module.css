@@ -1,0 +1,244 @@
+.container {
+    min-height: 100vh;
+    position: relative;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #FFFEF0 0%, #FFF8DC 50%, #FFFACD 100%);
+    z-index: -1;
+}
+
+.header {
+    text-align: center;
+    padding: 2rem 1.5rem 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.logoIcon {
+    width: 56px;
+    height: 56px;
+    background: var(--neo-cyan);
+    border: 4px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo h1 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+}
+
+.tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.main {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 3rem;
+}
+
+/* Endpoint Card */
+.endpointCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 2rem;
+    text-align: center;
+}
+
+.endpointCard h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+.urlBox {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0.75rem;
+}
+
+.urlInput {
+    flex: 1;
+    padding: 1rem;
+    border: 3px solid var(--neo-black);
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.9rem;
+    background: #f8f8f8;
+}
+
+.copyButton {
+    padding: 1rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    border-left: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.copyButton:hover {
+    background: var(--neo-green);
+}
+
+.hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.primaryButton {
+    padding: 0.875rem 2rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.primaryButton:hover {
+    background: var(--neo-green);
+    color: var(--neo-black);
+}
+
+.secondaryButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.secondaryButton:hover {
+    background: var(--neo-yellow);
+}
+
+.secondaryButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Empty State */
+.emptyState {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.emptyState h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    margin: 1rem 0 0.5rem;
+}
+
+.emptyState p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.createButton {
+    padding: 1rem 2.5rem;
+    background: var(--neo-green);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.createButton:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.createButton:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.createButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Features */
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.feature {
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.feature h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.feature p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+
+    .urlInput {
+        font-size: 0.75rem;
+    }
+}

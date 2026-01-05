@@ -1,0 +1,211 @@
+'use client';
+
+import { useState, useEffect, useCallback, use } from 'react';
+import { useRouter } from 'next/navigation';
+import Navigation from '@/components/Navigation';
+import Toast, { useToast } from '@/components/Toast';
+import { CopyIcon, CheckIcon, RefreshIcon, BoltIcon, TrashIcon } from '@/components/Icons';
+import styles from './page.module.css';
+
+interface WebhookRequest {
+    id: number;
+    method: string;
+    headers: Record<string, string>;
+    body: string;
+    query_params: Record<string, string>;
+    content_length: number;
+    created_at: string;
+}
+
+interface PageProps {
+    params: Promise<{ id: string }>;
+}
+
+export default function WebhookDetailPage({ params }: PageProps) {
+    const { id } = use(params);
+    const [requests, setRequests] = useState<WebhookRequest[]>([]);
+    const [selectedRequest, setSelectedRequest] = useState<WebhookRequest | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [copied, setCopied] = useState(false);
+    const { toasts, addToast, removeToast } = useToast();
+    const router = useRouter();
+
+    const webhookUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/api/hook/${id}`
+        : `/api/hook/${id}`;
+
+    const fetchRequests = useCallback(async () => {
+        try {
+            const response = await fetch(`/api/webhook?id=${id}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    addToast('Endpoint not found', 'error');
+                    router.push('/webhook');
+                    return;
+                }
+                throw new Error('Failed to fetch');
+            }
+
+            const data = await response.json();
+            setRequests(data.requests || []);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    }, [id, addToast, router]);
+
+    useEffect(() => {
+        fetchRequests();
+
+        // Poll for new requests every 3 seconds
+        const interval = setInterval(fetchRequests, 3000);
+        return () => clearInterval(interval);
+    }, [fetchRequests]);
+
+    const copyUrl = async () => {
+        await navigator.clipboard.writeText(webhookUrl);
+        setCopied(true);
+        addToast('URL copied', 'success');
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const formatTime = (dateStr: string) => {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (diff < 60) return `${diff}s ago`;
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        return date.toLocaleDateString();
+    };
+
+    const formatSize = (bytes: number) => {
+        if (bytes < 1024) return `${bytes} B`;
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    };
+
+    const getMethodColor = (method: string) => {
+        switch (method) {
+            case 'GET': return styles.methodGet;
+            case 'POST': return styles.methodPost;
+            case 'PUT': return styles.methodPut;
+            case 'PATCH': return styles.methodPatch;
+            case 'DELETE': return styles.methodDelete;
+            default: return '';
+        }
+    };
+
+    return (
+        <div className={styles.container}>
+            <div className={styles.backgroundGradient}></div>
+
+            <Toast toasts={toasts} removeToast={removeToast} />
+            <Navigation />
+
+            <header className={styles.header}>
+                <div className={styles.urlRow}>
+                    <input
+                        type="text"
+                        value={webhookUrl}
+                        readOnly
+                        className={styles.urlInput}
+                    />
+                    <button onClick={copyUrl} className={styles.copyButton}>
+                        {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
+                    </button>
+                    <button onClick={fetchRequests} className={styles.refreshButton}>
+                        <RefreshIcon size={18} />
+                    </button>
+                </div>
+            </header>
+
+            <main className={styles.main}>
+                <div className={styles.layout}>
+                    {/* Request List */}
+                    <div className={styles.requestList}>
+                        <div className={styles.listHeader}>
+                            <h2>Requests ({requests.length})</h2>
+                        </div>
+
+                        {loading ? (
+                            <div className={styles.loading}>Loading...</div>
+                        ) : requests.length === 0 ? (
+                            <div className={styles.empty}>
+                                <BoltIcon size={32} />
+                                <p>No requests yet</p>
+                                <span>Send a request to your webhook URL</span>
+                            </div>
+                        ) : (
+                            <div className={styles.list}>
+                                {requests.map((req) => (
+                                    <button
+                                        key={req.id}
+                                        className={`${styles.requestItem} ${selectedRequest?.id === req.id ? styles.selected : ''}`}
+                                        onClick={() => setSelectedRequest(req)}
+                                    >
+                                        <span className={`${styles.method} ${getMethodColor(req.method)}`}>
+                                            {req.method}
+                                        </span>
+                                        <span className={styles.time}>{formatTime(req.created_at)}</span>
+                                        <span className={styles.size}>{formatSize(req.content_length)}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Request Detail */}
+                    <div className={styles.requestDetail}>
+                        {selectedRequest ? (
+                            <>
+                                <div className={styles.detailHeader}>
+                                    <span className={`${styles.method} ${getMethodColor(selectedRequest.method)}`}>
+                                        {selectedRequest.method}
+                                    </span>
+                                    <span>{new Date(selectedRequest.created_at).toLocaleString()}</span>
+                                </div>
+
+                                <div className={styles.section}>
+                                    <h3>Headers</h3>
+                                    <pre className={styles.code}>
+                                        {JSON.stringify(selectedRequest.headers, null, 2)}
+                                    </pre>
+                                </div>
+
+                                {Object.keys(selectedRequest.query_params).length > 0 && (
+                                    <div className={styles.section}>
+                                        <h3>Query Parameters</h3>
+                                        <pre className={styles.code}>
+                                            {JSON.stringify(selectedRequest.query_params, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+
+                                {selectedRequest.body && (
+                                    <div className={styles.section}>
+                                        <h3>Body</h3>
+                                        <pre className={styles.code}>
+                                            {(() => {
+                                                try {
+                                                    return JSON.stringify(JSON.parse(selectedRequest.body), null, 2);
+                                                } catch {
+                                                    return selectedRequest.body;
+                                                }
+                                            })()}
+                                        </pre>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className={styles.noSelection}>
+                                <p>Select a request to view details</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}

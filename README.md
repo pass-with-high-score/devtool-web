@@ -7,6 +7,7 @@ Free online developer tools. No signup required, 100% client-side processing.
 - **Subdomain Scanner** - Discover subdomains using CT logs, VirusTotal, Shodan, Subfinder
 - **OTP Generator** - Generate TOTP codes with key saving and password protection
 - **Base64 Image** - View/encode images to Base64 with drag & drop
+- **Webhook Tester** - Receive and inspect webhook requests in real-time
 
 ## Quick Start
 
@@ -33,6 +34,9 @@ SHODAN_API_KEY=
 
 # Base URL (e.g. https://yourdomain.com)
 NEXT_PUBLIC_BASE_URL=https://yourdomain.com
+
+# PostgreSQL for Webhook Tester
+DATABASE_URL=postgresql://user:pass@host:5432/db
 ```
 
 ## API Keys (Optional)
