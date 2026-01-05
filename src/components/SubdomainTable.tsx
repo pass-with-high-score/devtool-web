@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import styles from './SubdomainTable.module.css';
+import Toast, { useToast } from './Toast';
 
 interface ScanResult {
     subdomain: string;
@@ -23,6 +24,7 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [filter, setFilter] = useState<FilterType>('all');
     const [search, setSearch] = useState('');
+    const { toasts, addToast, removeToast } = useToast();
 
     const handleSort = (key: SortKey) => {
         if (sortKey === key) {
@@ -87,15 +89,20 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
 
     const handleCopySubdomain = async (subdomain: string) => {
         await navigator.clipboard.writeText(subdomain);
+        addToast(`Copied: ${subdomain.length > 30 ? subdomain.slice(0, 30) + '...' : subdomain}`);
     };
 
     const handleCopyAll = async () => {
         const text = filteredAndSorted.map(s => s.subdomain).join('\n');
         await navigator.clipboard.writeText(text);
+        addToast(`Copied ${filteredAndSorted.length} subdomains!`);
     };
 
     return (
         <div className={styles.tableContainer}>
+            {/* Toast Notifications */}
+            <Toast toasts={toasts} removeToast={removeToast} />
+
             {/* Controls */}
             <div className={styles.controls}>
                 <div className={styles.searchWrapper}>
