@@ -688,21 +688,173 @@
 }
 
 @media (max-width: 640px) {
+    .header {
+        padding: 0 1rem;
+    }
+
+    .header h1 {
+        font-size: 1.25rem;
+    }
+
+    .header p {
+        font-size: 0.8rem;
+    }
+
+    .main {
+        padding: 0 1rem 2rem;
+    }
+
     .features {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .feature {
+        padding: 1rem;
+    }
+
+    .feature h3 {
+        font-size: 0.75rem;
+    }
+
+    .feature p {
+        font-size: 0.75rem;
     }
 
     .webhookGrid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .webhookCard {
+        padding: 1rem;
+    }
+
+    .cardHeader h3 {
+        font-size: 0.9rem;
     }
 
     .cardMeta {
         flex-direction: column;
         gap: 0.25rem;
+        font-size: 0.75rem;
+    }
+
+    .cardUrl {
+        padding: 0.5rem;
+    }
+
+    .cardUrl code {
+        font-size: 0.65rem;
+        word-break: break-all;
     }
 
     .testOptionsRow {
         flex-direction: column;
         align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .testOptionsBadges {
+        flex-wrap: wrap;
+    }
+
+    .cardActions {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+
+    .cardActions button {
+        justify-content: center;
+    }
+
+    .viewButton {
+        flex: 1;
+        padding: 0.75rem;
+    }
+
+    .copyUrlButton {
+        min-width: 60px;
+    }
+
+    /* Dialog Mobile */
+    .dialogOverlay {
+        padding: 0.75rem;
+        align-items: flex-start;
+        padding-top: 2rem;
+    }
+
+    .dialog,
+    .testOptionsDialog {
+        padding: 1.25rem;
+        max-width: 100%;
+    }
+
+    .dialog h3,
+    .testOptionsDialog h3 {
+        font-size: 0.85rem;
+    }
+
+    .dialogInput {
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+
+    .dialogActions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .dialogActions button {
+        width: 100%;
+        padding: 0.875rem;
+    }
+
+    .sliderWithInput {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .delayTextInput {
+        width: 100%;
+    }
+
+    .statusSelect {
+        font-size: 0.85rem;
+        padding: 0.625rem 0.75rem;
+    }
+
+    .testOptionSection {
+        padding: 0.75rem;
+    }
+
+    .testOptionHeader {
+        font-size: 0.7rem;
+    }
+
+    .testOptionDesc {
+        font-size: 0.75rem;
+    }
+
+    /* Empty state */
+    .emptyState {
+        padding: 2rem 1rem;
+    }
+
+    .emptyState h2 {
+        font-size: 1rem;
+    }
+
+    .createButton {
+        width: 100%;
+        padding: 0.875rem 1.5rem;
+        font-size: 0.75rem;
+    }
+
+    /* Create card */
+    .createCard {
+        min-height: 120px;
+        padding: 1rem;
     }
 }
