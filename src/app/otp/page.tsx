@@ -44,6 +44,7 @@ export default function OTPPage() {
     const [passwordInput, setPasswordInput] = useState('');
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
     const [showSetPasswordDialog, setShowSetPasswordDialog] = useState(false);
+    const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [dialogError, setDialogError] = useState<string | null>(null);
@@ -136,6 +137,7 @@ export default function OTPPage() {
     const closeDialog = () => {
         setShowUnlockDialog(false);
         setShowSetPasswordDialog(false);
+        setShowResetConfirmDialog(false);
         setPasswordInput('');
         setNewPassword('');
         setConfirmPassword('');
@@ -579,6 +581,19 @@ export default function OTPPage() {
                                 Cancel
                             </button>
                         </div>
+
+                        <div className={styles.dialogFooter}>
+                            <button
+                                onClick={() => {
+                                    setShowUnlockDialog(false);
+                                    setShowResetConfirmDialog(true);
+                                    setDialogError(null);
+                                }}
+                                className={styles.forgotPassword}
+                            >
+                                Forgot password? Reset all data
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -623,6 +638,55 @@ export default function OTPPage() {
                         <div className={styles.dialogActions}>
                             <button onClick={handleSetPassword} className={styles.dialogPrimary}>
                                 Set Password
+                            </button>
+                            <button onClick={closeDialog} className={styles.dialogSecondary}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reset Confirmation Dialog */}
+            {showResetConfirmDialog && (
+                <div className={styles.dialogOverlay} onClick={closeDialog}>
+                    <div className={styles.dialogDanger} onClick={e => e.stopPropagation()}>
+                        <button className={styles.dialogClose} onClick={closeDialog}>
+                            <XIcon size={24} />
+                        </button>
+                        <div className={styles.dialogHeader}>
+                            <AlertIcon size={32} />
+                            <h2>Reset All Data?</h2>
+                        </div>
+                        <div className={styles.warningBox}>
+                            <p><strong>Warning:</strong> This action cannot be undone!</p>
+                            <ul>
+                                <li>All saved keys will be permanently deleted</li>
+                                <li>Password protection will be removed</li>
+                                <li>You will need to re-add your keys manually</li>
+                            </ul>
+                        </div>
+                        <p className={styles.dialogText}>
+                            If you forgot your password, this is the only way to regain access.
+                        </p>
+
+                        <div className={styles.dialogActions}>
+                            <button
+                                onClick={() => {
+                                    // Clear all data
+                                    localStorage.removeItem('otp-keys');
+                                    localStorage.removeItem('otp-password-hash');
+                                    setSavedKeys([]);
+                                    setStoredPasswordHash(null);
+                                    setIsUnlocked(false);
+                                    setSecret('');
+                                    setOtpCodes(null);
+                                    setActiveKeyId(null);
+                                    closeDialog();
+                                }}
+                                className={styles.dialogDanger}
+                            >
+                                Yes, Delete Everything
                             </button>
                             <button onClick={closeDialog} className={styles.dialogSecondary}>
                                 Cancel

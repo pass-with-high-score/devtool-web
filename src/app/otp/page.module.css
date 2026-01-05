@@ -800,6 +800,83 @@
     color: var(--neo-black);
 }
 
+/* Forgot Password & Reset Dialog */
+.dialogFooter {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 2px dashed var(--neo-black);
+    text-align: center;
+}
+
+.forgotPassword {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.15s;
+}
+
+.forgotPassword:hover {
+    color: var(--neo-red);
+}
+
+.dialogDanger {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-red);
+    box-shadow: 12px 12px 0px var(--neo-red);
+    padding: 2rem;
+    max-width: 480px;
+    width: 100%;
+    position: relative;
+    animation: slideIn 0.2s ease-out;
+}
+
+button.dialogDanger {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    background: var(--neo-red);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-white);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+button.dialogDanger:hover {
+    background: var(--neo-black);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.warningBox {
+    background: #fff3cd;
+    border: 3px solid var(--neo-black);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.warningBox p {
+    margin: 0 0 0.75rem 0;
+    color: var(--neo-black);
+}
+
+.warningBox ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.warningBox li {
+    font-size: 0.9rem;
+    color: var(--neo-black);
+    margin-bottom: 0.25rem;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .mainGrid {
