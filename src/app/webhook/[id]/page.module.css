@@ -302,6 +302,15 @@
     margin-bottom: 0.5rem;
 }
 
+.pathDisplay {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+}
+
 .code {
     background: #1a1a1a;
     color: #f8f8f8;

@@ -342,23 +342,42 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                     </div>
                                 </div>
 
-                                {Object.keys(parseJsonField(selectedRequest.query_params)).length > 0 && (
-                                    <div className={styles.section}>
-                                        <h3>Query Parameters</h3>
-                                        <div className={styles.tableWrapper}>
-                                            <table className={styles.headersTable}>
-                                                <tbody>
-                                                    {Object.entries(parseJsonField(selectedRequest.query_params)).map(([key, value]) => (
-                                                        <tr key={key}>
-                                                            <td className={styles.headerKey}>{key}</td>
-                                                            <td className={styles.headerValue}>{value}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                )}
+                                {(() => {
+                                    const allParams = parseJsonField(selectedRequest.query_params);
+                                    const pathParam = allParams['_path'];
+                                    const queryParams = Object.fromEntries(
+                                        Object.entries(allParams).filter(([key]) => key !== '_path')
+                                    );
+
+                                    return (
+                                        <>
+                                            {pathParam && (
+                                                <div className={styles.section}>
+                                                    <h3>Path</h3>
+                                                    <div className={styles.pathDisplay}>{pathParam}</div>
+                                                </div>
+                                            )}
+
+                                            {Object.keys(queryParams).length > 0 && (
+                                                <div className={styles.section}>
+                                                    <h3>Query Parameters</h3>
+                                                    <div className={styles.tableWrapper}>
+                                                        <table className={styles.headersTable}>
+                                                            <tbody>
+                                                                {Object.entries(queryParams).map(([key, value]) => (
+                                                                    <tr key={key}>
+                                                                        <td className={styles.headerKey}>{key}</td>
+                                                                        <td className={styles.headerValue}>{value}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
 
                                 {selectedRequest.body && (
                                     <div className={styles.section}>

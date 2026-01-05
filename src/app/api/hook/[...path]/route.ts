@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
 interface RouteParams {
-    params: Promise<{ id: string }>;
+    params: Promise<{ path: string[] }>;
 }
 
 // Handle ALL HTTP methods to receive webhooks
 async function handleWebhook(request: NextRequest, { params }: RouteParams) {
-    const { id: endpointId } = await params;
+    const { path } = await params;
+    // First segment is the endpoint ID, rest are path parameters
+    const endpointId = path[0];
+    const pathParams = path.slice(1);
 
     try {
         // Verify endpoint exists
@@ -31,6 +34,11 @@ async function handleWebhook(request: NextRequest, { params }: RouteParams) {
         request.nextUrl.searchParams.forEach((value, key) => {
             queryParams[key] = value;
         });
+
+        // Add path params to query params for storage
+        if (pathParams.length > 0) {
+            queryParams['_path'] = '/' + pathParams.join('/');
+        }
 
         // Get body
         let body = '';
