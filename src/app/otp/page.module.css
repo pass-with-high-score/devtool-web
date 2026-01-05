@@ -89,7 +89,7 @@
 
 /* Main Content */
 .otpContent {
-    max-width: 500px;
+    max-width: 600px;
     margin: 0 auto;
 }
 
@@ -120,6 +120,44 @@
     margin-bottom: 0.5rem;
 }
 
+.labelRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.labelRow label {
+    margin-bottom: 0;
+}
+
+.generateButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.generateButton:hover {
+    background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.generateButton:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+}
+
 .secretInput {
     width: 100%;
     padding: 1rem;
@@ -133,6 +171,33 @@
 
 .secretInput:focus {
     box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.hexInput {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    font-family: monospace;
+    border: 3px solid var(--neo-black);
+    background: #f0f0f0;
+    color: var(--text-muted);
+    outline: none;
+}
+
+.smallCopyButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    color: var(--neo-black);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.smallCopyButton:hover {
+    background: var(--neo-yellow);
 }
 
 .saveRow {
@@ -193,32 +258,73 @@
     margin-bottom: 2rem;
 }
 
+/* OTP Triple Layout */
+.otpTriple {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 1rem;
+    align-items: start;
+    margin-bottom: 1.5rem;
+}
+
+.otpColumn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.6;
+}
+
+.otpColumnMain {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.otpLabel {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.otpCodeSmall {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--neo-black);
+    letter-spacing: 0.1em;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--neo-black);
+}
+
 .otpCode {
     display: flex;
     justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    gap: 0.35rem;
 }
 
 .otpDigit {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 60px;
-    height: 80px;
+    width: 48px;
+    height: 64px;
     background: var(--neo-black);
     color: var(--neo-green);
     font-family: 'Lexend Mega', sans-serif;
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 900;
-    border: 4px solid var(--neo-black);
+    border: 3px solid var(--neo-black);
 }
 
 .otpTimer {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 1.5rem;
 }
 
 .timerBar {
@@ -247,14 +353,14 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 1rem 2rem;
+    padding: 0.75rem 1.5rem;
     background: var(--neo-green);
-    border: 4px solid var(--neo-black);
-    box-shadow: 4px 4px 0px var(--neo-black);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0px var(--neo-black);
     color: var(--neo-black);
     font-family: 'Lexend Mega', sans-serif;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
     cursor: pointer;
 }
@@ -263,12 +369,111 @@
     background: var(--neo-yellow);
 }
 
+/* QR Code Section */
+.qrSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.qrSection h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 1rem;
+}
+
+.qrContainer {
+    display: inline-block;
+    padding: 1rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+}
+
+.qrImage {
+    display: block;
+    width: 200px;
+    height: 200px;
+}
+
+.qrCanvas {
+    display: block;
+}
+
+.qrNote {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Epoch Info Section */
+.epochSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.epochHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.epochHeader h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin: 0;
+}
+
+.epochGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.epochItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--neo-black);
+}
+
+.epochLabel {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.epochValue {
+    font-family: monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--neo-black);
+    word-break: break-all;
+}
+
 /* Saved Keys */
 .savedKeys {
     background: var(--neo-white);
     border: 4px solid var(--neo-black);
     box-shadow: 8px 8px 0px var(--neo-black);
     padding: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .savedKeys h3 {
@@ -462,4 +667,26 @@
 .githubLink:hover {
     background: var(--neo-white);
     color: var(--neo-black);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .otpTriple {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .otpColumn {
+        opacity: 1;
+    }
+
+    .otpDigit {
+        width: 40px;
+        height: 54px;
+        font-size: 1.5rem;
+    }
+
+    .epochGrid {
+        grid-template-columns: 1fr;
+    }
 }

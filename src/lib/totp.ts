@@ -7,6 +7,70 @@
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
 /**
+ * Encode a Uint8Array to base32 string
+ */
+export function base32Encode(data: Uint8Array): string {
+    let result = '';
+    let bits = 0;
+    let value = 0;
+
+    for (const byte of data) {
+        value = (value << 8) | byte;
+        bits += 8;
+
+        while (bits >= 5) {
+            bits -= 5;
+            result += BASE32_ALPHABET[(value >> bits) & 0x1f];
+        }
+    }
+
+    if (bits > 0) {
+        result += BASE32_ALPHABET[(value << (5 - bits)) & 0x1f];
+    }
+
+    return result;
+}
+
+/**
+ * Generate a random Base32 secret key
+ * @param length - Number of bytes for the secret (default: 20 = 32 chars base32)
+ */
+export function generateRandomSecret(length: number = 20): string {
+    const randomBytes = new Uint8Array(length);
+    crypto.getRandomValues(randomBytes);
+    return base32Encode(randomBytes);
+}
+
+/**
+ * Convert a Base32 secret to hexadecimal string
+ */
+export function secretToHex(secret: string): string {
+    try {
+        const bytes = base32Decode(secret);
+        return Array.from(bytes)
+            .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+            .join('');
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * Get epoch information for TOTP calculation
+ */
+export function getEpochInfo(timeStep: number = 30): {
+    epoch: number;
+    iteration: number;
+    iterationHex: string;
+} {
+    const epoch = Math.floor(Date.now() / 1000);
+    const iteration = Math.floor(epoch / timeStep);
+    const iterationHex = '0x' + iteration.toString(16).toUpperCase().padStart(16, '0');
+
+    return { epoch, iteration, iterationHex };
+}
+
+/**
  * Decode a base32 encoded string to Uint8Array
  */
 export function base32Decode(encoded: string): Uint8Array {
@@ -131,4 +195,27 @@ export function isValidBase32(secret: string): boolean {
         }
     }
     return true;
+}
+
+/**
+ * Generate TOTP codes for previous, current, and next time windows
+ * @param secret - Base32 encoded secret key
+ * @param timeStep - Time step in seconds (default: 30)
+ * @param digits - Number of digits (default: 6)
+ */
+export async function generateTOTPWithOffset(
+    secret: string,
+    timeStep: number = 30,
+    digits: number = 6
+): Promise<{ previous: string; current: string; next: string }> {
+    const now = Math.floor(Date.now() / 1000);
+    const currentWindow = Math.floor(now / timeStep) * timeStep;
+
+    const [previous, current, next] = await Promise.all([
+        generateTOTP(secret, timeStep, digits, currentWindow - timeStep),
+        generateTOTP(secret, timeStep, digits, currentWindow),
+        generateTOTP(secret, timeStep, digits, currentWindow + timeStep),
+    ]);
+
+    return { previous, current, next };
 }

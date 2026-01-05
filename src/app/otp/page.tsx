@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { generateTOTP, getTimeRemaining, isValidBase32 } from '@/lib/totp';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import QRCode from 'qrcode';
+import { generateTOTP, getTimeRemaining, isValidBase32, generateRandomSecret, secretToHex, getEpochInfo, generateTOTPWithOffset } from '@/lib/totp';
 import Navigation from '@/components/Navigation';
-import { CopyIcon, AlertIcon, CheckIcon, GithubIcon, LockIcon, KeyIcon } from '@/components/Icons';
+import { CopyIcon, AlertIcon, CheckIcon, GithubIcon, LockIcon, KeyIcon, RefreshIcon, InfoCircleIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 interface SavedKey {
@@ -12,18 +13,32 @@ interface SavedKey {
     secret: string;
 }
 
+interface OTPCodes {
+    previous: string;
+    current: string;
+    next: string;
+}
+
+interface EpochInfo {
+    epoch: number;
+    iteration: number;
+    iterationHex: string;
+}
+
 export default function OTPPage() {
     const [secret, setSecret] = useState('');
     const [keyName, setKeyName] = useState('');
-    const [otp, setOtp] = useState<string | null>(null);
+    const [otpCodes, setOtpCodes] = useState<OTPCodes | null>(null);
     const [timeRemaining, setTimeRemaining] = useState(30);
     const [error, setError] = useState<string | null>(null);
-    const [copied, setCopied] = useState(false);
+    const [copiedItem, setCopiedItem] = useState<string | null>(null);
     const [savedKeys, setSavedKeys] = useState<SavedKey[]>([]);
     const [activeKeyId, setActiveKeyId] = useState<string | null>(null);
+    const [hexSecret, setHexSecret] = useState('');
+    const [epochInfo, setEpochInfo] = useState<EpochInfo | null>(null);
+    const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
     // Password protection
-    const [password, setPassword] = useState('');
     const [storedPasswordHash, setStoredPasswordHash] = useState<string | null>(null);
     const [isUnlocked, setIsUnlocked] = useState(false);
     const [passwordInput, setPasswordInput] = useState('');
@@ -70,6 +85,15 @@ export default function OTPPage() {
         }
     }, [savedKeys]);
 
+    // Update hex display when secret changes
+    useEffect(() => {
+        if (secret.trim() && isValidBase32(secret)) {
+            setHexSecret(secretToHex(secret));
+        } else {
+            setHexSecret('');
+        }
+    }, [secret]);
+
     const handleUnlock = async () => {
         if (!passwordInput.trim()) {
             setError('Please enter your password');
@@ -108,23 +132,23 @@ export default function OTPPage() {
 
     const generateOTP = useCallback(async (secretKey: string) => {
         if (!secretKey.trim()) {
-            setOtp(null);
+            setOtpCodes(null);
             return;
         }
 
         if (!isValidBase32(secretKey)) {
             setError('Invalid secret key format (must be base32)');
-            setOtp(null);
+            setOtpCodes(null);
             return;
         }
 
         try {
-            const code = await generateTOTP(secretKey);
-            setOtp(code);
+            const codes = await generateTOTPWithOffset(secretKey);
+            setOtpCodes(codes);
             setError(null);
         } catch {
             setError('Failed to generate OTP');
-            setOtp(null);
+            setOtpCodes(null);
         }
     }, []);
 
@@ -137,20 +161,30 @@ export default function OTPPage() {
         const interval = setInterval(() => {
             const remaining = getTimeRemaining();
             setTimeRemaining(remaining);
+            setEpochInfo(getEpochInfo());
 
             if (remaining === 30) {
                 generateOTP(secret);
             }
         }, 1000);
 
+        // Initial epoch info
+        setEpochInfo(getEpochInfo());
+
         return () => clearInterval(interval);
     }, [secret, generateOTP]);
 
-    const handleCopy = async () => {
-        if (!otp) return;
-        await navigator.clipboard.writeText(otp);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopy = async (text: string, itemName: string) => {
+        await navigator.clipboard.writeText(text);
+        setCopiedItem(itemName);
+        setTimeout(() => setCopiedItem(null), 2000);
+    };
+
+    const handleGenerateRandomSecret = () => {
+        const newSecret = generateRandomSecret();
+        setSecret(newSecret);
+        setActiveKeyId(null);
+        setError(null);
     };
 
     const handleSaveKey = () => {
@@ -182,14 +216,30 @@ export default function OTPPage() {
         if (activeKeyId === id) {
             setActiveKeyId(null);
             setSecret('');
-            setOtp(null);
+            setOtpCodes(null);
         }
     };
 
     const progressPercent = (timeRemaining / 30) * 100;
 
+    // Generate QR code on canvas
+    useEffect(() => {
+        if (qrCanvasRef.current && secret.trim() && isValidBase32(secret)) {
+            const otpAuthUrl = `otpauth://totp/OTPGenerator?secret=${secret}&algorithm=SHA1&digits=6&period=30`;
+            QRCode.toCanvas(qrCanvasRef.current, otpAuthUrl, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            }).catch(err => console.error('QR Code generation error:', err));
+        }
+    }, [secret]);
+
+    const showQRCode = secret.trim() && isValidBase32(secret);
+
     // Check if password protection is needed for saved keys
-    const needsPassword = storedPasswordHash && !isUnlocked && savedKeys.length === 0;
     const hasSavedKeysLocked = storedPasswordHash && !isUnlocked;
 
     return (
@@ -218,7 +268,17 @@ export default function OTPPage() {
                 {/* Input Section */}
                 <div className={styles.inputSection}>
                     <div className={styles.inputGroup}>
-                        <label>Secret Key (Base32)</label>
+                        <div className={styles.labelRow}>
+                            <label>Secret Key (Base32)</label>
+                            <button
+                                onClick={handleGenerateRandomSecret}
+                                className={styles.generateButton}
+                                title="Generate random secret"
+                            >
+                                <RefreshIcon size={18} />
+                                Generate
+                            </button>
+                        </div>
                         <input
                             type="text"
                             value={secret}
@@ -231,6 +291,27 @@ export default function OTPPage() {
                             className={styles.secretInput}
                         />
                     </div>
+
+                    {/* Hex Display */}
+                    {hexSecret && (
+                        <div className={styles.inputGroup}>
+                            <div className={styles.labelRow}>
+                                <label>Secret (Hex)</label>
+                                <button
+                                    onClick={() => handleCopy(hexSecret, 'hex')}
+                                    className={styles.smallCopyButton}
+                                >
+                                    {copiedItem === 'hex' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                                </button>
+                            </div>
+                            <input
+                                type="text"
+                                value={hexSecret}
+                                readOnly
+                                className={styles.hexInput}
+                            />
+                        </div>
+                    )}
 
                     <div className={styles.inputGroup}>
                         <label>Key Name (optional)</label>
@@ -261,13 +342,63 @@ export default function OTPPage() {
                     </div>
                 )}
 
-                {/* OTP Display */}
-                {otp && (
+                {/* OTP Display - Previous/Current/Next */}
+                {otpCodes && (
                     <div className={styles.otpDisplay}>
-                        <div className={styles.otpCode}>
-                            {otp.split('').map((digit, i) => (
-                                <span key={i} className={styles.otpDigit}>{digit}</span>
-                            ))}
+                        <div className={styles.otpTriple}>
+                            {/* Previous OTP */}
+                            <div className={styles.otpColumn}>
+                                <span className={styles.otpLabel}>Previous</span>
+                                <div className={styles.otpCodeSmall}>
+                                    {otpCodes.previous}
+                                </div>
+                                <button
+                                    onClick={() => handleCopy(otpCodes.previous, 'previous')}
+                                    className={styles.smallCopyButton}
+                                >
+                                    {copiedItem === 'previous' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                                </button>
+                            </div>
+
+                            {/* Current OTP */}
+                            <div className={styles.otpColumnMain}>
+                                <span className={styles.otpLabel}>Current</span>
+                                <div className={styles.otpCode}>
+                                    {otpCodes.current.split('').map((digit, i) => (
+                                        <span key={i} className={styles.otpDigit}>{digit}</span>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => handleCopy(otpCodes.current, 'current')}
+                                    className={styles.copyButton}
+                                >
+                                    {copiedItem === 'current' ? (
+                                        <>
+                                            <CheckIcon size={20} />
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CopyIcon size={20} />
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Next OTP */}
+                            <div className={styles.otpColumn}>
+                                <span className={styles.otpLabel}>Next</span>
+                                <div className={styles.otpCodeSmall}>
+                                    {otpCodes.next}
+                                </div>
+                                <button
+                                    onClick={() => handleCopy(otpCodes.next, 'next')}
+                                    className={styles.smallCopyButton}
+                                >
+                                    {copiedItem === 'next' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className={styles.otpTimer}>
@@ -279,20 +410,41 @@ export default function OTPPage() {
                             </div>
                             <span className={styles.timerText}>{timeRemaining}s</span>
                         </div>
+                    </div>
+                )}
 
-                        <button onClick={handleCopy} className={styles.copyButton}>
-                            {copied ? (
-                                <>
-                                    <CheckIcon size={20} />
-                                    Copied!
-                                </>
-                            ) : (
-                                <>
-                                    <CopyIcon size={20} />
-                                    Copy Code
-                                </>
-                            )}
-                        </button>
+                {/* QR Code Section */}
+                {showQRCode && (
+                    <div className={styles.qrSection}>
+                        <h3>QR Code</h3>
+                        <div className={styles.qrContainer}>
+                            <canvas ref={qrCanvasRef} className={styles.qrCanvas} />
+                        </div>
+                        <p className={styles.qrNote}>Scan with authenticator app</p>
+                    </div>
+                )}
+
+                {/* Epoch Info Section */}
+                {epochInfo && otpCodes && (
+                    <div className={styles.epochSection}>
+                        <div className={styles.epochHeader}>
+                            <InfoCircleIcon size={20} />
+                            <h3>Technical Info</h3>
+                        </div>
+                        <div className={styles.epochGrid}>
+                            <div className={styles.epochItem}>
+                                <span className={styles.epochLabel}>Epoch</span>
+                                <span className={styles.epochValue}>{epochInfo.epoch}</span>
+                            </div>
+                            <div className={styles.epochItem}>
+                                <span className={styles.epochLabel}>Iteration</span>
+                                <span className={styles.epochValue}>{epochInfo.iteration}</span>
+                            </div>
+                            <div className={styles.epochItem}>
+                                <span className={styles.epochLabel}>Iteration (Hex)</span>
+                                <span className={styles.epochValue}>{epochInfo.iterationHex}</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 
