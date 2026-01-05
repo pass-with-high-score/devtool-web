@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import QRCode from 'qrcode';
 import { generateTOTP, getTimeRemaining, isValidBase32, generateRandomSecret, secretToHex, getEpochInfo, generateTOTPWithOffset } from '@/lib/totp';
 import Navigation from '@/components/Navigation';
+import Toast, { useToast } from '@/components/Toast';
 import { CopyIcon, AlertIcon, CheckIcon, GithubIcon, LockIcon, KeyIcon, RefreshIcon, InfoCircleIcon, XIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
@@ -30,13 +31,13 @@ export default function OTPPage() {
     const [keyName, setKeyName] = useState('');
     const [otpCodes, setOtpCodes] = useState<OTPCodes | null>(null);
     const [timeRemaining, setTimeRemaining] = useState(30);
-    const [error, setError] = useState<string | null>(null);
     const [copiedItem, setCopiedItem] = useState<string | null>(null);
     const [savedKeys, setSavedKeys] = useState<SavedKey[]>([]);
     const [activeKeyId, setActiveKeyId] = useState<string | null>(null);
     const [hexSecret, setHexSecret] = useState('');
     const [epochInfo, setEpochInfo] = useState<EpochInfo | null>(null);
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+    const { toasts, addToast, removeToast } = useToast();
 
     // Password protection
     const [storedPasswordHash, setStoredPasswordHash] = useState<string | null>(null);
@@ -109,6 +110,7 @@ export default function OTPPage() {
             setPasswordInput('');
             setDialogError(null);
             setShowUnlockDialog(false);
+            addToast('Keys unlocked successfully', 'success');
         } else {
             setDialogError('Incorrect password');
         }
@@ -132,6 +134,7 @@ export default function OTPPage() {
         setNewPassword('');
         setConfirmPassword('');
         setDialogError(null);
+        addToast('Password protection enabled', 'success');
     };
 
     const closeDialog = () => {
@@ -151,7 +154,6 @@ export default function OTPPage() {
         }
 
         if (!isValidBase32(secretKey)) {
-            setError('Invalid secret key format (must be base32)');
             setOtpCodes(null);
             return;
         }
@@ -159,9 +161,7 @@ export default function OTPPage() {
         try {
             const codes = await generateTOTPWithOffset(secretKey);
             setOtpCodes(codes);
-            setError(null);
         } catch {
-            setError('Failed to generate OTP');
             setOtpCodes(null);
         }
     }, []);
@@ -191,6 +191,7 @@ export default function OTPPage() {
     const handleCopy = async (text: string, itemName: string) => {
         await navigator.clipboard.writeText(text);
         setCopiedItem(itemName);
+        addToast('Copied to clipboard', 'success');
         setTimeout(() => setCopiedItem(null), 2000);
     };
 
@@ -198,12 +199,12 @@ export default function OTPPage() {
         const newSecret = generateRandomSecret();
         setSecret(newSecret);
         setActiveKeyId(null);
-        setError(null);
+        addToast('Random secret generated', 'success');
     };
 
     const handleSaveKey = () => {
         if (!secret.trim() || !isValidBase32(secret)) {
-            setError('Cannot save invalid key');
+            addToast('Cannot save invalid key', 'error');
             return;
         }
 
@@ -217,20 +218,24 @@ export default function OTPPage() {
         setSavedKeys([...savedKeys, newKey]);
         setActiveKeyId(newKey.id);
         setKeyName('');
+        addToast(`Key "${name}" saved`, 'success');
     };
 
     const handleSelectKey = (key: SavedKey) => {
         setSecret(key.secret);
         setActiveKeyId(key.id);
-        setError(null);
     };
 
     const handleDeleteKey = (id: string) => {
+        const deletedKey = savedKeys.find(k => k.id === id);
         setSavedKeys(savedKeys.filter(k => k.id !== id));
         if (activeKeyId === id) {
             setActiveKeyId(null);
             setSecret('');
             setOtpCodes(null);
+        }
+        if (deletedKey) {
+            addToast(`Key "${deletedKey.name}" deleted`, 'info');
         }
     };
 
@@ -260,6 +265,9 @@ export default function OTPPage() {
         <div className={styles.container}>
             {/* Background */}
             <div className={styles.backgroundGradient}></div>
+
+            {/* Toast Notifications */}
+            <Toast toasts={toasts} removeToast={removeToast} />
 
             {/* Navigation */}
             <Navigation />
@@ -301,7 +309,6 @@ export default function OTPPage() {
                                 onChange={(e) => {
                                     setSecret(e.target.value);
                                     setActiveKeyId(null);
-                                    setError(null);
                                 }}
                                 placeholder="JBSWY3DPEHPK3PXP"
                                 className={styles.secretInput}
@@ -349,14 +356,6 @@ export default function OTPPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Error Message */}
-                    {error && (
-                        <div className={styles.errorMessage}>
-                            <AlertIcon size={20} />
-                            {error}
-                        </div>
-                    )}
 
                     {/* Saved Keys Section */}
                     {hasSavedKeysLocked ? (
@@ -683,6 +682,7 @@ export default function OTPPage() {
                                     setOtpCodes(null);
                                     setActiveKeyId(null);
                                     closeDialog();
+                                    addToast('All data has been reset', 'info');
                                 }}
                                 className={styles.dialogDanger}
                             >

@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import styles from './Toast.module.css';
 import { CheckIcon, XIcon, InfoIcon } from './Icons';
+
+const MAX_VISIBLE_TOASTS = 2;
 
 export interface ToastMessage {
     id: number;
@@ -16,9 +18,12 @@ interface ToastProps {
 }
 
 export default function Toast({ toasts, removeToast }: ToastProps) {
+    // Only show the last MAX_VISIBLE_TOASTS
+    const visibleToasts = toasts.slice(-MAX_VISIBLE_TOASTS);
+
     return (
         <div className={styles.toastContainer}>
-            {toasts.map((toast) => (
+            {visibleToasts.map((toast) => (
                 <ToastItem key={toast.id} toast={toast} onRemove={() => removeToast(toast.id)} />
             ))}
         </div>
@@ -27,15 +32,34 @@ export default function Toast({ toasts, removeToast }: ToastProps) {
 
 function ToastItem({ toast, onRemove }: { toast: ToastMessage; onRemove: () => void }) {
     const [isExiting, setIsExiting] = useState(false);
+    const onRemoveRef = useRef(onRemove);
+
+    // Keep callback ref updated
+    useEffect(() => {
+        onRemoveRef.current = onRemove;
+    }, [onRemove]);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
+        // Auto-hide timeout
+        const hideTimer = setTimeout(() => {
             setIsExiting(true);
-            setTimeout(onRemove, 200);
         }, 2500);
 
-        return () => clearTimeout(timer);
-    }, [onRemove]);
+        // Remove after exit animation
+        const removeTimer = setTimeout(() => {
+            onRemoveRef.current();
+        }, 2700);
+
+        return () => {
+            clearTimeout(hideTimer);
+            clearTimeout(removeTimer);
+        };
+    }, [toast.id]); // Only depend on toast.id, not onRemove
+
+    const handleClick = () => {
+        setIsExiting(true);
+        setTimeout(() => onRemoveRef.current(), 200);
+    };
 
     const typeClass = toast.type === 'error'
         ? styles.toastError
@@ -52,7 +76,7 @@ function ToastItem({ toast, onRemove }: { toast: ToastMessage; onRemove: () => v
     return (
         <div
             className={`${styles.toast} ${typeClass} ${isExiting ? styles.toastExit : ''}`}
-            onClick={onRemove}
+            onClick={handleClick}
         >
             <span className={styles.toastIcon}>
                 <Icon size={20} />
@@ -68,14 +92,18 @@ let toastId = 0;
 export function useToast() {
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-    const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
         const id = ++toastId;
-        setToasts((prev) => [...prev, { id, message, type }]);
-    };
+        setToasts((prev) => {
+            const newToasts = [...prev, { id, message, type }];
+            // Keep only the last MAX_VISIBLE_TOASTS * 2 to prevent memory leak
+            return newToasts.slice(-MAX_VISIBLE_TOASTS * 2);
+        });
+    }, []);
 
-    const removeToast = (id: number) => {
+    const removeToast = useCallback((id: number) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-    };
+    }, []);
 
     return { toasts, addToast, removeToast };
 }
