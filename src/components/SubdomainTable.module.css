@@ -388,16 +388,52 @@
     position: absolute;
     left: 20px;
     top: -50px;
-    width: 200px;
-    height: auto;
+    width: 250px;
+    height: 160px;
+    /* Fixed height to prevent collapse */
     border: 4px solid var(--neo-black);
     box-shadow: 4px 4px 0px var(--neo-black);
     z-index: 100;
     background: white;
+    align-items: center;
+    justify-content: center;
+}
+
+.thumbnailImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.thumbnailLoading,
+.thumbnailError {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--neo-black);
+    background: var(--bg-primary);
+}
+
+.thumbnailSpinner {
+    animation: spin 1s linear infinite;
+    color: var(--neo-black);
+}
+
+.thumbnailError {
+    background: var(--neo-red);
+    color: var(--neo-white);
 }
 
 .thumbnailHint:hover .thumbnailPopup {
-    display: block;
+    display: flex;
+    /* Changed from block to flex for centering loading content */
 }
 
 .ipWrapper {
@@ -408,4 +444,10 @@
 
 .cloudIconSmall {
     color: var(--neo-orange);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

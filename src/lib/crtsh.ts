@@ -66,26 +66,3 @@ function isValidSubdomain(subdomain: string): boolean {
     const pattern = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/;
     return pattern.test(subdomain);
 }
-
-/**
- * Common subdomain wordlist for brute-force discovery
- */
-export const COMMON_SUBDOMAINS = [
-    'www', 'api', 'dev', 'staging', 'test', 'admin', 'app', 'mail',
-    'cdn', 'static', 'assets', 'img', 'images', 'media', 'video',
-    'blog', 'shop', 'store', 'docs', 'help', 'support', 'status',
-    'm', 'mobile', 'beta', 'alpha', 'demo', 'sandbox',
-    'eu', 'us', 'ap', 'asia', 'uk', 'de', 'fr',
-    'db', 'database', 'sql', 'mysql', 'postgres', 'redis', 'mongo',
-    'ftp', 'sftp', 'ssh', 'vpn', 'proxy', 'gateway',
-    'auth', 'login', 'sso', 'oauth', 'id', 'accounts',
-    'ws', 'websocket', 'socket', 'realtime', 'live', 'stream',
-    'internal', 'intranet', 'corp', 'office', 'portal',
-];
-
-/**
- * Generate subdomains using wordlist
- */
-export function generateWordlistSubdomains(domain: string): string[] {
-    return COMMON_SUBDOMAINS.map(prefix => `${prefix}.${domain}`);
-}

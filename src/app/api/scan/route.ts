@@ -4,7 +4,6 @@
  * 
  * Data Sources:
  * - Certificate Transparency logs (crt.sh)
- * - Common subdomain wordlist
  * - VirusTotal API (optional)
  * - Shodan API (optional)
  * - Subfinder CLI (optional)
@@ -16,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchSubdomainsFromCrtSh, generateWordlistSubdomains } from '@/lib/crtsh';
+import { fetchSubdomainsFromCrtSh } from '@/lib/crtsh';
 import { resolveSubdomains, DnsResult } from '@/lib/dns-resolver';
 import { isCloudflare } from '@/lib/cloudflare';
 import { fetchSubdomainsFromVirusTotal } from '@/lib/virustotal';
@@ -49,7 +48,6 @@ export interface ScanResponse {
         no_ip: number;
         sources: {
             crtsh: number;
-            wordlist: number;
             virustotal: number;
             shodan: number;
             subfinder: number;
@@ -101,16 +99,14 @@ export async function POST(request: NextRequest) {
 
         // Step 1: Fetch from all sources
         console.log('[Scan] Fetching subdomains from all sources...');
-        const [ctSubdomains, wordlistSubdomains, vtSubdomains, shodanSubdomains, subfinderSubdomains] = await Promise.all([
+        const [ctSubdomains, vtSubdomains, shodanSubdomains, subfinderSubdomains] = await Promise.all([
             fetchSubdomainsFromCrtSh(domain),
-            Promise.resolve(generateWordlistSubdomains(domain)),
             fetchSubdomainsFromVirusTotal(domain, virustotalApiKey || process.env.VIRUSTOTAL_API_KEY),
             fetchSubdomainsFromShodan(domain, shodanApiKey || process.env.SHODAN_API_KEY),
             enableSubfinder ? fetchSubdomainsFromSubfinder(domain) : Promise.resolve([]),
         ]);
 
         addSubdomains(ctSubdomains, 'crtsh');
-        addSubdomains(wordlistSubdomains, 'wordlist');
         addSubdomains(vtSubdomains, 'virustotal');
         addSubdomains(shodanSubdomains, 'shodan');
         addSubdomains(subfinderSubdomains, 'subfinder');
@@ -196,7 +192,6 @@ export async function POST(request: NextRequest) {
             no_ip: results.filter(r => !r.ip).length,
             sources: {
                 crtsh: ctSubdomains.length,
-                wordlist: wordlistSubdomains.length,
                 virustotal: vtSubdomains.length,
                 shodan: shodanSubdomains.length,
                 subfinder: subfinderSubdomains.length,

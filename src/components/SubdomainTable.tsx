@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import styles from './SubdomainTable.module.css';
 import Toast, { useToast } from './Toast';
-import { SearchIcon, CopyIcon, CloudIcon, GlobeIcon, ServerIcon, CameraIcon, WarningIcon } from './Icons';
+import { SearchIcon, CopyIcon, CloudIcon, GlobeIcon, ServerIcon, CameraIcon, WarningIcon, SpinnerIcon } from './Icons';
 
 interface ScanResult {
     subdomain: string;
@@ -27,6 +27,94 @@ type SortKey = 'subdomain' | 'ip' | 'cloudflare' | 'ports' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 type FilterType = 'all' | 'cloudflare' | 'non-cloudflare' | 'has-ip' | 'no-ip' | 'has-ports' | 'http-alive';
+
+function SubdomainThumbnail({ subdomain }: { subdomain: string }) {
+    const [blobUrl, setBlobUrl] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasError, setHasError] = useState(false);
+
+    useEffect(() => {
+        let isMounted = true;
+        let objectUrl: string | null = null;
+        const controller = new AbortController();
+        const url = `https://s0.wp.com/mshots/v1/${encodeURIComponent(`https://${subdomain}`)}?w=500`;
+
+        setIsLoading(true);
+        setHasError(false);
+        setBlobUrl(null);
+
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+        }, 8000);
+
+        fetch(url, { signal: controller.signal })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob();
+            })
+            .then(blob => {
+                if (isMounted) {
+                    objectUrl = URL.createObjectURL(blob);
+                    setBlobUrl(objectUrl);
+                    setIsLoading(false);
+                }
+            })
+            .catch(() => {
+                if (isMounted) {
+                    setHasError(true);
+                    setIsLoading(false);
+                }
+            })
+            .finally(() => {
+                clearTimeout(timeoutId);
+            });
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+            clearTimeout(timeoutId);
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+    }, [subdomain]);
+
+    // Cleanup blob URL when component unmounts or blobUrl changes
+    useEffect(() => {
+        return () => {
+            if (blobUrl) {
+                URL.revokeObjectURL(blobUrl);
+            }
+        };
+    }, [blobUrl]);
+
+    return (
+        <div className={styles.thumbnailHint}>
+            <CameraIcon size={14} />
+            <div className={styles.thumbnailPopup}>
+                {isLoading && (
+                    <div className={styles.thumbnailLoading}>
+                        <SpinnerIcon size={24} className={styles.thumbnailSpinner} />
+                        <span>Loading preview...</span>
+                    </div>
+                )}
+                {hasError && !isLoading && (
+                    <div className={styles.thumbnailError}>
+                        <WarningIcon size={24} />
+                        <span>Preview unavailable</span>
+                    </div>
+                )}
+                {blobUrl && !isLoading && !hasError && (
+                    <img
+                        src={blobUrl}
+                        className={styles.thumbnailImage}
+                        alt={`Preview of ${subdomain}`}
+                    />
+                )}
+            </div>
+        </div>
+    );
+}
 
 export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
     const [sortKey, setSortKey] = useState<SortKey>('subdomain');
@@ -194,16 +282,8 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                             <tr key={item.subdomain} className={item.ip ? '' : styles.noIpRow}>
                                 <td className={styles.subdomainCell}>
                                     <div className={styles.subdomainWrapper}>
-                                        {/* Thumbnail on hover (concept) */}
-                                        <div className={styles.thumbnailHint}>
-                                            <CameraIcon size={14} />
-                                            <img
-                                                src={`https://api.microlink.io?url=http://${item.subdomain}&screenshot=true&embed=screenshot.url&meta=false&n=1`}
-                                                className={styles.thumbnailPopup}
-                                                loading="lazy"
-                                                alt=""
-                                            />
-                                        </div>
+                                        {/* Thumbnail on hover */}
+                                        <SubdomainThumbnail subdomain={item.subdomain} />
                                         <span className={styles.subdomain}>{item.subdomain}</span>
                                     </div>
                                 </td>
