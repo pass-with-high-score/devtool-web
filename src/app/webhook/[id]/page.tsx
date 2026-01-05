@@ -34,6 +34,18 @@ export default function WebhookDetailPage({ params }: PageProps) {
         ? `${window.location.origin}/api/hook/${id}`
         : `/api/hook/${id}`;
 
+    // Helper to parse JSON fields that might be strings
+    const parseJsonField = (field: Record<string, string> | string): Record<string, string> => {
+        if (typeof field === 'string') {
+            try {
+                return JSON.parse(field);
+            } catch {
+                return {};
+            }
+        }
+        return field || {};
+    };
+
     const fetchRequests = useCallback(async () => {
         try {
             const response = await fetch(`/api/webhook?id=${id}`);
@@ -168,18 +180,36 @@ export default function WebhookDetailPage({ params }: PageProps) {
                                 </div>
 
                                 <div className={styles.section}>
-                                    <h3>Headers</h3>
-                                    <pre className={styles.code}>
-                                        {JSON.stringify(selectedRequest.headers, null, 2)}
-                                    </pre>
+                                    <h3>Headers ({Object.keys(parseJsonField(selectedRequest.headers)).length})</h3>
+                                    <div className={styles.tableWrapper}>
+                                        <table className={styles.headersTable}>
+                                            <tbody>
+                                                {Object.entries(parseJsonField(selectedRequest.headers)).map(([key, value]) => (
+                                                    <tr key={key}>
+                                                        <td className={styles.headerKey}>{key}</td>
+                                                        <td className={styles.headerValue}>{value}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
 
-                                {Object.keys(selectedRequest.query_params).length > 0 && (
+                                {Object.keys(parseJsonField(selectedRequest.query_params)).length > 0 && (
                                     <div className={styles.section}>
                                         <h3>Query Parameters</h3>
-                                        <pre className={styles.code}>
-                                            {JSON.stringify(selectedRequest.query_params, null, 2)}
-                                        </pre>
+                                        <div className={styles.tableWrapper}>
+                                            <table className={styles.headersTable}>
+                                                <tbody>
+                                                    {Object.entries(parseJsonField(selectedRequest.query_params)).map(([key, value]) => (
+                                                        <tr key={key}>
+                                                            <td className={styles.headerKey}>{key}</td>
+                                                            <td className={styles.headerValue}>{value}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 )}
 
