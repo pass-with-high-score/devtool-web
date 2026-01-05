@@ -9,16 +9,18 @@ interface ScanResult {
     subdomain: string;
     ip: string | null;
     cloudflare: boolean;
+    ports?: number[];
+    source?: string[];
 }
 
 interface SubdomainTableProps {
     subdomains: ScanResult[];
 }
 
-type SortKey = 'subdomain' | 'ip' | 'cloudflare';
+type SortKey = 'subdomain' | 'ip' | 'cloudflare' | 'ports';
 type SortOrder = 'asc' | 'desc';
 
-type FilterType = 'all' | 'cloudflare' | 'non-cloudflare' | 'has-ip' | 'no-ip';
+type FilterType = 'all' | 'cloudflare' | 'non-cloudflare' | 'has-ip' | 'no-ip' | 'has-ports';
 
 export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
     const [sortKey, setSortKey] = useState<SortKey>('subdomain');
@@ -26,6 +28,9 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
     const [filter, setFilter] = useState<FilterType>('all');
     const [search, setSearch] = useState('');
     const { toasts, addToast, removeToast } = useToast();
+
+    // Check if any subdomain has ports
+    const hasPorts = useMemo(() => subdomains.some(s => s.ports && s.ports.length > 0), [subdomains]);
 
     const handleSort = (key: SortKey) => {
         if (sortKey === key) {
@@ -53,6 +58,9 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
             case 'no-ip':
                 result = result.filter(s => !s.ip);
                 break;
+            case 'has-ports':
+                result = result.filter(s => s.ports && s.ports.length > 0);
+                break;
         }
 
         // Apply search
@@ -60,7 +68,8 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
             const searchLower = search.toLowerCase();
             result = result.filter(s =>
                 s.subdomain.toLowerCase().includes(searchLower) ||
-                (s.ip && s.ip.includes(search))
+                (s.ip && s.ip.includes(search)) ||
+                (s.ports && s.ports.some(p => p.toString().includes(search)))
             );
         }
 
@@ -79,6 +88,9 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                     break;
                 case 'cloudflare':
                     comparison = (a.cloudflare ? 1 : 0) - (b.cloudflare ? 1 : 0);
+                    break;
+                case 'ports':
+                    comparison = (a.ports?.length || 0) - (b.ports?.length || 0);
                     break;
             }
 
@@ -99,6 +111,8 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
         addToast(`Copied ${filteredAndSorted.length} subdomains!`);
     };
 
+    const portsWithHasPorts = hasPorts ? subdomains.filter(s => s.ports && s.ports.length > 0).length : 0;
+
     return (
         <div className={styles.tableContainer}>
             {/* Toast Notifications */}
@@ -112,7 +126,7 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search subdomains or IPs..."
+                        placeholder="Search subdomains, IPs, or ports..."
                         className={styles.searchInput}
                     />
                 </div>
@@ -129,6 +143,7 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                         <option value="non-cloudflare">Non-Cloudflare ({subdomains.filter(s => !s.cloudflare && s.ip).length})</option>
                         <option value="has-ip">Has IP ({subdomains.filter(s => s.ip).length})</option>
                         <option value="no-ip">No IP ({subdomains.filter(s => !s.ip).length})</option>
+                        {hasPorts && <option value="has-ports">Has Ports ({portsWithHasPorts})</option>}
                     </select>
                 </div>
 
@@ -165,6 +180,14 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                                     <span className={styles.sortIndicator}>{sortOrder === 'asc' ? '↑' : '↓'}</span>
                                 )}
                             </th>
+                            {hasPorts && (
+                                <th onClick={() => handleSort('ports')} className={styles.sortable}>
+                                    Ports
+                                    {sortKey === 'ports' && (
+                                        <span className={styles.sortIndicator}>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                    )}
+                                </th>
+                            )}
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -192,6 +215,22 @@ export default function SubdomainTable({ subdomains }: SubdomainTableProps) {
                                         )
                                     )}
                                 </td>
+                                {hasPorts && (
+                                    <td className={styles.portsCell}>
+                                        {item.ports && item.ports.length > 0 ? (
+                                            <span className={styles.portsList}>
+                                                {item.ports.slice(0, 5).map(port => (
+                                                    <span key={port} className={styles.portBadge}>{port}</span>
+                                                ))}
+                                                {item.ports.length > 5 && (
+                                                    <span className={styles.portMore}>+{item.ports.length - 5}</span>
+                                                )}
+                                            </span>
+                                        ) : (
+                                            <span className={styles.noIp}>—</span>
+                                        )}
+                                    </td>
+                                )}
                                 <td className={styles.actionsCell}>
                                     <button
                                         onClick={() => handleCopySubdomain(item.subdomain)}

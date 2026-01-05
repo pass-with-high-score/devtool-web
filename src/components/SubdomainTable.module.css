@@ -238,6 +238,36 @@
     font-weight: 600;
 }
 
+/* Ports Cell */
+.portsCell {
+    min-width: 150px;
+}
+
+.portsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.portBadge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: var(--neo-blue);
+    border: 2px solid var(--neo-black);
+    color: var(--neo-white);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+}
+
+.portMore {
+    padding: 0.25rem 0.5rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
 .actionsCell {
     min-width: 80px;
 }

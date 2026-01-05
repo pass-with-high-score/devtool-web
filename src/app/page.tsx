@@ -9,6 +9,16 @@ interface ScanResult {
   subdomain: string;
   ip: string | null;
   cloudflare: boolean;
+  ports?: number[];
+  source?: string[];
+}
+
+interface SourceStats {
+  crtsh: number;
+  wordlist: number;
+  virustotal: number;
+  shodan: number;
+  subfinder: number;
 }
 
 interface ScanResponse {
@@ -18,6 +28,7 @@ interface ScanResponse {
     total: number;
     cloudflare: number;
     no_ip: number;
+    sources?: SourceStats;
   };
   subdomains: ScanResult[];
 }
@@ -27,6 +38,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScanResponse | null>(null);
+
+  // Settings
+  const [showSettings, setShowSettings] = useState(false);
+  const [virustotalApiKey, setVirusTotalApiKey] = useState('');
+  const [shodanApiKey, setShodanApiKey] = useState('');
+  const [enableSubfinder, setEnableSubfinder] = useState(false);
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +61,12 @@ export default function Home() {
       const response = await fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: domain.trim() }),
+        body: JSON.stringify({
+          domain: domain.trim(),
+          virustotalApiKey: virustotalApiKey || undefined,
+          shodanApiKey: shodanApiKey || undefined,
+          enableSubfinder,
+        }),
       });
 
       if (!response.ok) {
@@ -90,9 +112,53 @@ export default function Home() {
           <h1>Subdomain Scanner</h1>
         </div>
         <p className={styles.tagline}>
-          Discover subdomains using Certificate Transparency logs, resolve DNS records, and detect Cloudflare protection
+          Discover subdomains using CT logs, VirusTotal, Shodan & Subfinder
         </p>
       </header>
+
+      {/* Settings Toggle */}
+      <button
+        onClick={() => setShowSettings(!showSettings)}
+        className={styles.settingsToggle}
+      >
+        {showSettings ? '▼ Hide Settings' : '▶ API Settings'}
+      </button>
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <div className={styles.settingsPanel}>
+          <div className={styles.settingRow}>
+            <label>VirusTotal API Key</label>
+            <input
+              type="password"
+              value={virustotalApiKey}
+              onChange={(e) => setVirusTotalApiKey(e.target.value)}
+              placeholder="Optional - get from virustotal.com"
+              className={styles.settingInput}
+            />
+          </div>
+          <div className={styles.settingRow}>
+            <label>Shodan API Key</label>
+            <input
+              type="password"
+              value={shodanApiKey}
+              onChange={(e) => setShodanApiKey(e.target.value)}
+              placeholder="Optional - get from shodan.io"
+              className={styles.settingInput}
+            />
+          </div>
+          <div className={styles.settingRow}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={enableSubfinder}
+                onChange={(e) => setEnableSubfinder(e.target.checked)}
+              />
+              Enable Subfinder (requires local install)
+            </label>
+          </div>
+        </div>
+      )}
 
       {/* Search Form */}
       <form onSubmit={handleScan} className={styles.searchForm}>
@@ -161,6 +227,23 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Source Stats */}
+          {result.stats.sources && (
+            <div className={styles.sourceStats}>
+              <span className={styles.sourceLabel}>Sources:</span>
+              <span className={styles.sourceBadge} data-source="crtsh">CT: {result.stats.sources.crtsh}</span>
+              {result.stats.sources.virustotal > 0 && (
+                <span className={styles.sourceBadge} data-source="virustotal">VT: {result.stats.sources.virustotal}</span>
+              )}
+              {result.stats.sources.shodan > 0 && (
+                <span className={styles.sourceBadge} data-source="shodan">Shodan: {result.stats.sources.shodan}</span>
+              )}
+              {result.stats.sources.subfinder > 0 && (
+                <span className={styles.sourceBadge} data-source="subfinder">Subfinder: {result.stats.sources.subfinder}</span>
+              )}
+            </div>
+          )}
+
           {/* Meta Info */}
           <div className={styles.metaInfo}>
             <span>Domain: <strong>{result.domain}</strong></span>
@@ -186,7 +269,7 @@ export default function Home() {
           <GithubIcon size={24} className={styles.githubIcon} />
           GitHub
         </a>
-        <p>Built with Next.js • Using Certificate Transparency logs from crt.sh</p>
+        <p>Built with Next.js • CT logs, VirusTotal, Shodan, Subfinder</p>
       </footer>
     </div>
   );
