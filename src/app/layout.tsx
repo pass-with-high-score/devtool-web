@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend_Mega } from "next/font/google";
 import "./globals.css";
+import FeedbackButton from "@/components/FeedbackButton";
 
 const lexendMega = Lexend_Mega({
   variable: "--font-lexend-mega",
@@ -115,6 +116,7 @@ export default function RootLayout({
       </head>
       <body className={`${lexendMega.variable} antialiased`}>
         {children}
+        <FeedbackButton />
       </body>
     </html>
   );

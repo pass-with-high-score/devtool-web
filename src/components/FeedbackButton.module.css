@@ -1,0 +1,256 @@
+/* Feedback FAB Button - Neo-Brutalism Style */
+
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    background: var(--neo-yellow);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    z-index: 1000;
+}
+
+.fab:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0px var(--neo-black);
+}
+
+.fab:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+/* Modal Overlay */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Modal */
+.modal {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 12px 12px 0px var(--neo-black);
+    width: 100%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.modalHeader h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.1rem;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.closeBtn {
+    background: transparent;
+    border: none;
+    color: var(--neo-white);
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s;
+}
+
+.closeBtn:hover {
+    opacity: 0.7;
+}
+
+/* Form */
+.form {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formGroup label {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+    padding: 0.75rem 1rem;
+    border: 3px solid var(--neo-black);
+    background: var(--neo-cream);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.15s ease;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+    outline: none;
+    box-shadow: 4px 4px 0px var(--neo-black);
+    transform: translate(-2px, -2px);
+}
+
+.formGroup textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.formGroup select {
+    cursor: pointer;
+}
+
+/* Submit Button */
+.submitBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--neo-green);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.submitBtn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.submitBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin: 0;
+}
+
+/* Success Message */
+.successMessage {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.successIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: var(--neo-green);
+    border: 4px solid var(--neo-black);
+    font-size: 2rem;
+    margin: 0 auto 1rem;
+}
+
+.successMessage p {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem;
+}
+
+.successMessage small {
+    color: var(--text-muted);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .fab {
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 54px;
+        height: 54px;
+    }
+
+    .modal {
+        max-height: 85vh;
+    }
+
+    .form {
+        padding: 1.25rem;
+    }
+}
