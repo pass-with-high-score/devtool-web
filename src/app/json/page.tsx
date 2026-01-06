@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon, RefreshIcon, UploadIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon, RefreshIcon, UploadIcon, SpinnerIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const STORAGE_KEY = 'json-bins-history';
@@ -75,7 +75,7 @@ print(data)`,
     };
 }
 
-export default function JsonServerPage() {
+function JsonServerContent() {
     const searchParams = useSearchParams();
     const [jsonInput, setJsonInput] = useState('');
     const [validation, setValidation] = useState<ValidationResult>({ valid: false, error: null, formatted: null });
@@ -632,5 +632,17 @@ export default function JsonServerPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function JsonServerPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
+                <SpinnerIcon size={48} />
+            </div>
+        }>
+            <JsonServerContent />
+        </Suspense>
     );
 }
