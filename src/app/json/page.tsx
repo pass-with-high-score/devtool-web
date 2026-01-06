@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon } from '@/components/Icons';
+import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon, UploadIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const STORAGE_KEY = 'json-bins-history';
@@ -68,6 +68,7 @@ export default function JsonServerPage() {
     const [history, setHistory] = useState<JsonBin[]>([]);
     const [copiedField, setCopiedField] = useState<string | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { toasts, addToast, removeToast } = useToast();
 
     // Load history from localStorage
@@ -172,6 +173,39 @@ export default function JsonServerPage() {
         setResult(null);
     };
 
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target?.result as string;
+            try {
+                // Try parsing to verify it's valid JSON, but allow editing even if slightly off (though requirements say valid json)
+                // Actually the tool validates on input change, so we just set the text.
+                // We'll throw if it's not even text.
+
+                // Let's verify it's valid JSON for better UX before setting
+                JSON.parse(content);
+                setJsonInput(content);
+                addToast('JSON imported successfully', 'success');
+            } catch (error) {
+                addToast('Invalid JSON file', 'error');
+            }
+        };
+        reader.onerror = () => {
+            addToast('Error reading file', 'error');
+        };
+        reader.readAsText(file);
+
+        // Reset input so same file can be selected again
+        event.target.value = '';
+    };
+
     const handleCopy = async (text: string, field: string) => {
         await navigator.clipboard.writeText(text);
         setCopiedField(field);
@@ -230,6 +264,21 @@ export default function JsonServerPage() {
                     {/* Toolbar */}
                     <div className={styles.toolbar}>
                         <div className={styles.toolbarLeft}>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="application/json"
+                                style={{ display: 'none' }}
+                            />
+                            <button
+                                onClick={handleImportClick}
+                                className={styles.toolButton}
+                                title="Import JSON file"
+                            >
+                                <UploadIcon size={16} style={{ marginRight: '6px' }} />
+                                Import
+                            </button>
                             <button
                                 onClick={handleFormat}
                                 disabled={!validation.valid}
