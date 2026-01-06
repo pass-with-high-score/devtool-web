@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -12,7 +12,7 @@ interface Tool {
     title: string;
     description: string;
     icon: React.ReactNode;
-    color: 'green' | 'cyan' | 'pink' | 'yellow';
+    color: 'green' | 'cyan' | 'pink' | 'yellow' | 'orange';
 }
 
 const tools: Tool[] = [
@@ -43,6 +43,13 @@ const tools: Tool[] = [
         description: 'Receive and inspect webhook requests in real-time from any service.',
         icon: <LinkIcon size={32} />,
         color: 'yellow',
+    },
+    {
+        href: '/json',
+        title: 'JSON Server',
+        description: 'Host, validate, and share JSON data. Create mock APIs with persistent storage.',
+        icon: <CodeIcon size={32} />,
+        color: 'orange',
     },
 ];
 

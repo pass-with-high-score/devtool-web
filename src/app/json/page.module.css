@@ -148,14 +148,14 @@
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 14px;
     line-height: 1.5;
-    background: #1a1a1a;
-    color: #00ff00;
+    background: var(--neo-white);
+    color: var(--neo-black);
     border: 4px solid var(--neo-black);
     resize: vertical;
 }
 
 .editor::placeholder {
-    color: #666;
+    color: var(--text-muted);
 }
 
 .editorError {

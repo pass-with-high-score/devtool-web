@@ -162,6 +162,10 @@
     background: var(--neo-yellow);
 }
 
+.orange .toolIcon {
+    background: var(--neo-orange);
+}
+
 .toolInfo {
     flex: 1;
 }
