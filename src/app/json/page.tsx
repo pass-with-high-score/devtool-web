@@ -1,0 +1,423 @@
+'use client';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import Navigation from '@/components/Navigation';
+import Toast, { useToast } from '@/components/Toast';
+import { CopyIcon, CheckIcon, CodeIcon, LinkIcon, ClockIcon, TrashIcon, ExternalLinkIcon } from '@/components/Icons';
+import styles from './page.module.css';
+
+const STORAGE_KEY = 'json-bins-history';
+const MAX_HISTORY = 20;
+
+interface JsonBin {
+    id: string;
+    url: string;
+    viewUrl: string;
+    editUrl: string;
+    editToken: string;
+    expiresAt: string | null;
+    ttl: string;
+    createdAt: string;
+    preview: string;
+}
+
+interface ValidationResult {
+    valid: boolean;
+    error: string | null;
+    formatted: string | null;
+}
+
+const TTL_OPTIONS = [
+    { value: '1h', label: '1 Hour' },
+    { value: '1d', label: '1 Day' },
+    { value: '7d', label: '7 Days' },
+    { value: 'never', label: 'Never' },
+];
+
+function validateJson(input: string): ValidationResult {
+    if (!input.trim()) {
+        return { valid: false, error: null, formatted: null };
+    }
+
+    try {
+        const parsed = JSON.parse(input);
+        const formatted = JSON.stringify(parsed, null, 2);
+        return { valid: true, error: null, formatted };
+    } catch (e) {
+        const error = e instanceof Error ? e.message : 'Invalid JSON';
+        return { valid: false, error, formatted: null };
+    }
+}
+
+function getPreview(json: string, maxLength: number = 60): string {
+    try {
+        const parsed = JSON.parse(json);
+        const str = JSON.stringify(parsed);
+        return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+    } catch {
+        return json.substring(0, maxLength);
+    }
+}
+
+export default function JsonServerPage() {
+    const [jsonInput, setJsonInput] = useState('');
+    const [validation, setValidation] = useState<ValidationResult>({ valid: false, error: null, formatted: null });
+    const [ttl, setTtl] = useState('7d');
+    const [saving, setSaving] = useState(false);
+    const [result, setResult] = useState<JsonBin | null>(null);
+    const [history, setHistory] = useState<JsonBin[]>([]);
+    const [copiedField, setCopiedField] = useState<string | null>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const { toasts, addToast, removeToast } = useToast();
+
+    // Load history from localStorage
+    useEffect(() => {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                setHistory(Array.isArray(parsed) ? parsed : []);
+            } catch {
+                setHistory([]);
+            }
+        }
+    }, []);
+
+    // Validate JSON on input change
+    useEffect(() => {
+        setValidation(validateJson(jsonInput));
+    }, [jsonInput]);
+
+    const saveToHistory = useCallback((bin: JsonBin) => {
+        setHistory(prev => {
+            const updated = [bin, ...prev.filter(b => b.id !== bin.id)].slice(0, MAX_HISTORY);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+        });
+    }, []);
+
+    const removeFromHistory = useCallback((id: string) => {
+        setHistory(prev => {
+            const updated = prev.filter(b => b.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+        });
+        addToast('Removed from history', 'info');
+    }, [addToast]);
+
+    const handleSave = async () => {
+        if (!validation.valid) {
+            addToast('Please enter valid JSON', 'error');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const response = await fetch(`/api/json?ttl=${ttl}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: jsonInput,
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to save');
+            }
+
+            const data = await response.json();
+            const bin: JsonBin = {
+                id: data.id,
+                url: data.url,
+                viewUrl: data.viewUrl,
+                editUrl: data.editUrl,
+                editToken: data.editToken,
+                expiresAt: data.expiresAt,
+                ttl: data.ttl,
+                createdAt: new Date().toISOString(),
+                preview: getPreview(jsonInput),
+            };
+
+            setResult(bin);
+            saveToHistory(bin);
+            addToast('JSON saved successfully!', 'success');
+        } catch (error) {
+            console.error(error);
+            addToast(error instanceof Error ? error.message : 'Failed to save JSON', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleFormat = () => {
+        if (validation.formatted) {
+            setJsonInput(validation.formatted);
+            addToast('JSON formatted', 'success');
+        }
+    };
+
+    const handleMinify = () => {
+        if (validation.valid) {
+            try {
+                const minified = JSON.stringify(JSON.parse(jsonInput));
+                setJsonInput(minified);
+                addToast('JSON minified', 'success');
+            } catch {
+                addToast('Failed to minify', 'error');
+            }
+        }
+    };
+
+    const handleClear = () => {
+        setJsonInput('');
+        setResult(null);
+    };
+
+    const handleCopy = async (text: string, field: string) => {
+        await navigator.clipboard.writeText(text);
+        setCopiedField(field);
+        addToast('Copied!', 'success');
+        setTimeout(() => setCopiedField(null), 2000);
+    };
+
+    const handleLoadFromHistory = (bin: JsonBin) => {
+        // Fetch the JSON content
+        fetch(bin.url)
+            .then(res => res.json())
+            .then(data => {
+                setJsonInput(JSON.stringify(data, null, 2));
+                setResult(bin);
+                addToast('Loaded from history', 'success');
+            })
+            .catch(() => {
+                addToast('Failed to load - bin may have expired', 'error');
+                removeFromHistory(bin.id);
+            });
+    };
+
+    const formatExpiry = (expiresAt: string | null) => {
+        if (!expiresAt) return 'Never';
+        const date = new Date(expiresAt);
+        const now = new Date();
+        const diff = date.getTime() - now.getTime();
+
+        if (diff < 0) return 'Expired';
+        if (diff < 3600000) return `${Math.round(diff / 60000)}m`;
+        if (diff < 86400000) return `${Math.round(diff / 3600000)}h`;
+        return `${Math.round(diff / 86400000)}d`;
+    };
+
+    return (
+        <div className={styles.container}>
+            <div className={styles.backgroundGradient}></div>
+
+            <Toast toasts={toasts} removeToast={removeToast} />
+            <Navigation />
+
+            <header className={styles.header}>
+                <div className={styles.logo}>
+                    <span className={styles.logoIcon}>
+                        <CodeIcon size={32} />
+                    </span>
+                    <h1>JSON Server</h1>
+                </div>
+                <p className={styles.tagline}>
+                    Paste JSON, get a public URL. Simple API hosting.
+                </p>
+            </header>
+
+            <main className={styles.main}>
+                <div className={styles.editorSection}>
+                    {/* Toolbar */}
+                    <div className={styles.toolbar}>
+                        <div className={styles.toolbarLeft}>
+                            <button
+                                onClick={handleFormat}
+                                disabled={!validation.valid}
+                                className={styles.toolButton}
+                                title="Format JSON"
+                            >
+                                Format
+                            </button>
+                            <button
+                                onClick={handleMinify}
+                                disabled={!validation.valid}
+                                className={styles.toolButton}
+                                title="Minify JSON"
+                            >
+                                Minify
+                            </button>
+                            <button
+                                onClick={handleClear}
+                                className={`${styles.toolButton} ${styles.clearButton}`}
+                                title="Clear"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                        <div className={styles.toolbarRight}>
+                            <select
+                                value={ttl}
+                                onChange={(e) => setTtl(e.target.value)}
+                                className={styles.ttlSelect}
+                            >
+                                {TTL_OPTIONS.map(opt => (
+                                    <option key={opt.value} value={opt.value}>
+                                        Expires: {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Editor */}
+                    <div className={styles.editorWrapper}>
+                        <textarea
+                            ref={textareaRef}
+                            value={jsonInput}
+                            onChange={(e) => setJsonInput(e.target.value)}
+                            placeholder='Paste your JSON here...\n\n{\n  "name": "Example",\n  "data": [1, 2, 3]\n}'
+                            className={`${styles.editor} ${validation.error ? styles.editorError : validation.valid ? styles.editorValid : ''}`}
+                            spellCheck={false}
+                        />
+                        {validation.error && (
+                            <div className={styles.errorMessage}>
+                                ❌ {validation.error}
+                            </div>
+                        )}
+                        {validation.valid && jsonInput && (
+                            <div className={styles.validMessage}>
+                                ✓ Valid JSON
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Save Button */}
+                    <button
+                        onClick={handleSave}
+                        disabled={!validation.valid || saving}
+                        className={styles.saveButton}
+                    >
+                        {saving ? 'Saving...' : 'Save & Get URL'}
+                    </button>
+
+                    {/* Result Panel */}
+                    {result && (
+                        <div className={styles.resultPanel}>
+                            <h3>🎉 Your JSON is live!</h3>
+
+                            <div className={styles.urlRow}>
+                                <label>Public URL</label>
+                                <div className={styles.urlBox}>
+                                    <code>{result.url}</code>
+                                    <button
+                                        onClick={() => handleCopy(result.url, 'url')}
+                                        className={styles.copyButton}
+                                    >
+                                        {copiedField === 'url' ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                                    </button>
+                                    <a
+                                        href={result.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={styles.openButton}
+                                    >
+                                        <ExternalLinkIcon size={16} />
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div className={styles.urlRow}>
+                                <label>Pretty View</label>
+                                <div className={styles.urlBox}>
+                                    <code>{result.viewUrl}</code>
+                                    <button
+                                        onClick={() => handleCopy(result.viewUrl, 'viewUrl')}
+                                        className={styles.copyButton}
+                                    >
+                                        {copiedField === 'viewUrl' ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                                    </button>
+                                    <a
+                                        href={result.viewUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={styles.openButton}
+                                    >
+                                        <ExternalLinkIcon size={16} />
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div className={styles.resultMeta}>
+                                <span><ClockIcon size={14} /> Expires: {formatExpiry(result.expiresAt)}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* History Section */}
+                {history.length > 0 && (
+                    <div className={styles.historySection}>
+                        <h3>📜 Recent Bins</h3>
+                        <div className={styles.historyList}>
+                            {history.map(bin => (
+                                <div key={bin.id} className={styles.historyItem}>
+                                    <div className={styles.historyPreview}>
+                                        <code>{bin.preview}</code>
+                                    </div>
+                                    <div className={styles.historyMeta}>
+                                        <span className={styles.historyId}>{bin.id}</span>
+                                        <span className={styles.historyExpiry}>
+                                            {formatExpiry(bin.expiresAt)}
+                                        </span>
+                                    </div>
+                                    <div className={styles.historyActions}>
+                                        <button
+                                            onClick={() => handleLoadFromHistory(bin)}
+                                            className={styles.historyButton}
+                                            title="Load"
+                                        >
+                                            <LinkIcon size={14} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleCopy(bin.url, bin.id)}
+                                            className={styles.historyButton}
+                                            title="Copy URL"
+                                        >
+                                            {copiedField === bin.id ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                                        </button>
+                                        <button
+                                            onClick={() => removeFromHistory(bin.id)}
+                                            className={`${styles.historyButton} ${styles.deleteButton}`}
+                                            title="Remove"
+                                        >
+                                            <TrashIcon size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Features */}
+                <div className={styles.features}>
+                    <div className={styles.feature}>
+                        <div className={styles.featureIcon}>🌐</div>
+                        <h3>Public API</h3>
+                        <p>Fetch your JSON from anywhere with CORS enabled</p>
+                    </div>
+                    <div className={styles.feature}>
+                        <div className={styles.featureIcon}>⚡</div>
+                        <h3>Instant</h3>
+                        <p>No account needed. Paste, save, use.</p>
+                    </div>
+                    <div className={styles.feature}>
+                        <div className={styles.featureIcon}>⏰</div>
+                        <h3>Flexible TTL</h3>
+                        <p>Set expiration from 1 hour to forever</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}

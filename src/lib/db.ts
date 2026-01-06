@@ -79,6 +79,23 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_webhook_endpoints_last_activity 
     ON webhook_endpoints(last_activity)
   `;
+
+  // JSON Bins table for JSON Server feature
+  await sql`
+    CREATE TABLE IF NOT EXISTS json_bins (
+      id VARCHAR(12) PRIMARY KEY,
+      content TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NULL,
+      edit_token VARCHAR(32) NULL
+    )
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_json_bins_expires_at 
+    ON json_bins(expires_at)
+  `;
 }
 
 // Cleanup old endpoints (7 days inactive)
@@ -86,5 +103,13 @@ export async function cleanupOldEndpoints() {
   await sql`
     DELETE FROM webhook_endpoints 
     WHERE last_activity < NOW() - INTERVAL '7 days'
+  `;
+}
+
+// Cleanup expired JSON bins
+export async function cleanupExpiredJsonBins() {
+  await sql`
+    DELETE FROM json_bins 
+    WHERE expires_at IS NOT NULL AND expires_at < NOW()
   `;
 }
