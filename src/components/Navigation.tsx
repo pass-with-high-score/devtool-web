@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, GithubIcon, LinkIcon, CodeIcon } from './Icons';
+import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, GithubIcon, LinkIcon, CodeIcon, CatIcon } from './Icons';
 import styles from './Navigation.module.css';
 
 interface NavItem {
@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
     { href: '/base64', label: 'Base64', icon: <ImageIcon size={18} /> },
     { href: '/webhook', label: 'Webhook', icon: <LinkIcon size={18} /> },
     { href: '/json', label: 'JSON', icon: <CodeIcon size={18} /> },
+    { href: '/aneko-builder', label: 'ANeko', icon: <CatIcon size={18} /> },
 ];
 
 export default function Navigation() {

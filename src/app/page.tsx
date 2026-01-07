@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, CatIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -50,6 +50,13 @@ const tools: Tool[] = [
         description: 'Host, validate, and share JSON data. Create mock APIs with persistent storage.',
         icon: <CodeIcon size={32} />,
         color: 'orange',
+    },
+    {
+        href: '/aneko-builder',
+        title: 'ANeko Builder',
+        description: 'Create custom skins for ANeko Reborn Android pet app with visual animation editor.',
+        icon: <CatIcon size={32} />,
+        color: 'pink',
     },
 ];
 

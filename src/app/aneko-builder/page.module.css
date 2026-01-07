@@ -1,0 +1,651 @@
+/* ANeko Builder Page Styles - Neubrutalism Design */
+
+.pageContainer {
+    min-height: 100vh;
+    padding: 1rem;
+    padding-bottom: 4rem;
+    background: var(--bg-primary);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-card);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logoBox {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-pink);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0 var(--neo-black);
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.headerActions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--neo-black);
+}
+
+.btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--neo-black);
+}
+
+.btnPrimary {
+    background: var(--neo-green);
+}
+
+.btnSecondary {
+    background: var(--neo-cyan);
+}
+
+.btnDanger {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+/* Metadata Row */
+.metadataRow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-card);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+}
+
+.metadataField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.metadataField label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.metadataField input {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    outline: none;
+}
+
+.metadataField input:focus {
+    background: var(--neo-yellow);
+}
+
+/* Main Grid Layout */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .mainGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Panel Styles */
+.panel {
+    background: var(--bg-card);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    display: flex;
+    flex-direction: column;
+}
+
+.panelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.panelTitle {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.panelContent {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+/* Assets Grid */
+.assetsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 0.5rem;
+}
+
+.assetItem {
+    position: relative;
+    aspect-ratio: 1;
+    background: var(--bg-primary);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+}
+
+.assetItem:hover {
+    background: var(--neo-yellow);
+    transform: scale(1.05);
+}
+
+.assetItem.selected {
+    background: var(--neo-cyan);
+    box-shadow: 3px 3px 0 var(--neo-black);
+}
+
+.assetItem img {
+    max-width: 100%;
+    max-height: 100%;
+    image-rendering: pixelated;
+}
+
+.assetDelete {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    background: var(--neo-red);
+    color: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+.assetItem:hover .assetDelete {
+    opacity: 1;
+}
+
+/* State List */
+.stateList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stateItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.stateItem:hover {
+    background: var(--neo-yellow);
+}
+
+.stateItem.selected {
+    background: var(--neo-cyan);
+    box-shadow: 3px 3px 0 var(--neo-black);
+}
+
+.stateItem.active {
+    background: var(--neo-green);
+}
+
+.stateName {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.stateFrameCount {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--neo-white);
+    padding: 0.15rem 0.5rem;
+    border: 2px solid var(--neo-black);
+}
+
+.stateActions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.stateActionBtn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.stateActionBtn:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+/* Preview Panel */
+.previewArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.previewCanvas {
+    width: 128px;
+    height: 128px;
+    background: #f0f0f0;
+    border: 4px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    image-rendering: pixelated;
+}
+
+.previewCanvas img {
+    max-width: 100%;
+    max-height: 100%;
+    image-rendering: pixelated;
+}
+
+.previewControls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.previewBtn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0 var(--neo-black);
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.previewBtn:hover {
+    background: var(--neo-yellow);
+}
+
+.previewBtn.playing {
+    background: var(--neo-green);
+}
+
+.speedControl {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.speedControl label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.speedControl input[type="range"] {
+    width: 100%;
+    height: 8px;
+    appearance: none;
+    background: var(--neo-black);
+    border: 2px solid var(--neo-black);
+}
+
+.speedControl input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    cursor: pointer;
+}
+
+/* Upload Zone */
+.uploadZone {
+    padding: 1.5rem;
+    text-align: center;
+    border: 3px dashed var(--neo-black);
+    background: var(--bg-primary);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.uploadZone:hover,
+.uploadZone.dragover {
+    background: var(--neo-yellow);
+}
+
+.uploadZone p {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.uploadZone small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Modal Styles */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    background: var(--bg-card);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0 var(--neo-black);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.modalTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.modalClose {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.modalClose:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+.modalContent {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 3px solid var(--neo-black);
+}
+
+/* Frame Timeline */
+.frameTimeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    min-height: 100px;
+}
+
+.frameItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+}
+
+.frameItem:hover {
+    background: var(--neo-yellow);
+}
+
+.frameItem img {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    object-fit: contain;
+}
+
+.frameDuration {
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.addFrameBtn {
+    width: 64px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px dashed var(--neo-black);
+    background: var(--bg-primary);
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.addFrameBtn:hover {
+    background: var(--neo-cyan);
+    border-style: solid;
+}
+
+/* Empty State */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.emptyState p {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Form Styles */
+.formGroup {
+    margin-bottom: 1rem;
+}
+
+.formGroup label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.formGroup input,
+.formGroup select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    outline: none;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+    background: var(--neo-yellow);
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+/* Add State Modal */
+.stateGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.stateOption {
+    padding: 0.75rem;
+    text-align: center;
+    background: var(--bg-primary);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.stateOption:hover {
+    background: var(--neo-yellow);
+}
+
+.stateOption.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.stateOption .stateName {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Settings Grid */
+.settingsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 500px) {
+    .settingsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Keyboard hint */
+.keyboardHint {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 2px solid var(--neo-black);
+    box-shadow: 3px 3px 0 var(--neo-pink);
+}
+
+.keyboardHint kbd {
+    padding: 0.1rem 0.4rem;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border-radius: 2px;
+    margin: 0 0.2rem;
+}
