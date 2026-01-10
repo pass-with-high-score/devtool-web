@@ -1,0 +1,442 @@
+/* Time Capsule View Page - Neo-Brutalism Style */
+
+.container {
+    min-height: 100vh;
+    position: relative;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #FFFEF0 0%, #FFF8DC 50%, #FFFACD 100%);
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    padding: 2rem 1.5rem 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.15s;
+}
+
+.backLink:hover {
+    color: var(--neo-black);
+}
+
+/* Main */
+.main {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+}
+
+/* Loading Card */
+.loadingCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.spinner {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(0.95);
+    }
+}
+
+/* Error Card */
+.errorCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.errorCard h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    margin: 1rem 0 0.5rem;
+}
+
+.errorCard p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.errorIcon {
+    font-size: 4rem;
+}
+
+.backButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    text-decoration: none;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+}
+
+.backButton:hover {
+    background: var(--neo-green);
+    color: var(--neo-black);
+}
+
+/* Capsule Card */
+.capsuleCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 2rem;
+    position: relative;
+}
+
+/* Status Badge */
+.statusBadge {
+    position: absolute;
+    top: -15px;
+    right: 20px;
+    padding: 0.5rem 1rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    border: 3px solid var(--neo-black);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.statusLocked {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+.statusUnlocked {
+    background: var(--neo-green);
+    color: var(--neo-black);
+}
+
+/* File Info */
+.fileInfo {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-top: 1rem;
+}
+
+.fileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+}
+
+.fileName {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    word-break: break-all;
+}
+
+.fileSize {
+    color: var(--text-muted);
+}
+
+/* Unlocked Section */
+.unlockedSection {
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+.celebrationIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1rem;
+    background: var(--neo-green);
+    border: 4px solid var(--neo-black);
+}
+
+.unlockedTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 0.5rem;
+}
+
+.unlockedText {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+/* Locked Section */
+.lockedSection {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.countdownTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+}
+
+/* Countdown */
+.countdown {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.countdownItem {
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    padding: 1rem 1.25rem;
+    min-width: 70px;
+}
+
+.countdownValue {
+    display: block;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.countdownLabel {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.unlockDateText {
+    margin-bottom: 2rem;
+    color: var(--text-muted);
+}
+
+/* Download Button */
+.downloadButton {
+    padding: 1rem 2.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: var(--neo-green);
+    color: var(--neo-black);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.downloadButton:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.downloadButton:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.downloadButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.downloadButtonDisabled {
+    padding: 1rem 2.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: #ddd;
+    color: var(--text-muted);
+    border: 4px solid var(--neo-black);
+    cursor: not-allowed;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.downloadCount {
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Metadata */
+.metadata {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 3px dashed var(--neo-black);
+    flex-wrap: wrap;
+}
+
+.metaItem {
+    text-align: center;
+}
+
+.metaLabel {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.metaValue {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Share Section */
+.shareSection {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.shareButton {
+    padding: 0.75rem 1.5rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    cursor: pointer;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.shareButton:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+/* Error Toast */
+.errorToast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--neo-red);
+    color: var(--neo-white);
+    padding: 1rem 2rem;
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    font-weight: 600;
+    z-index: 100;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .header {
+        padding: 1.5rem 1rem;
+    }
+
+    .main {
+        padding: 0 1rem 2rem;
+    }
+
+    .capsuleCard {
+        padding: 1.5rem;
+    }
+
+    .fileName {
+        font-size: 1rem;
+    }
+
+    .countdown {
+        gap: 0.5rem;
+    }
+
+    .countdownItem {
+        padding: 0.75rem 1rem;
+        min-width: 60px;
+    }
+
+    .countdownValue {
+        font-size: 1.5rem;
+    }
+
+    .metadata {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .downloadButton,
+    .downloadButtonDisabled {
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .statusBadge {
+        position: static;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .fileInfo {
+        padding-top: 0;
+    }
+}

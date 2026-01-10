@@ -96,6 +96,27 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_json_bins_expires_at 
     ON json_bins(expires_at)
   `;
+
+  // Time Capsules table for time-locked file storage
+  await sql`
+    CREATE TABLE IF NOT EXISTS time_capsules (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      object_key TEXT NOT NULL UNIQUE,
+      original_filename TEXT NOT NULL,
+      file_size BIGINT NOT NULL,
+      content_type TEXT,
+      unlock_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      uploaded_at TIMESTAMPTZ,
+      downloaded_at TIMESTAMPTZ,
+      download_count INTEGER DEFAULT 0
+    )
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_time_capsules_unlock_at 
+    ON time_capsules(unlock_at)
+  `;
 }
 
 // Cleanup old endpoints (7 days inactive)

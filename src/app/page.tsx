@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, CatIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, CatIcon, HourglassIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -52,11 +52,18 @@ const tools: Tool[] = [
         color: 'orange',
     },
     {
+        href: '/capsule',
+        title: 'Time Capsule',
+        description: 'Upload files and lock them for a set time. Download only after the unlock date.',
+        icon: <HourglassIcon size={32} />,
+        color: 'pink',
+    },
+    {
         href: '/aneko-builder',
         title: 'ANeko Builder',
         description: 'Create custom skins for ANeko Reborn Android pet app with visual animation editor.',
         icon: <CatIcon size={32} />,
-        color: 'pink',
+        color: 'cyan',
     },
 ];
 

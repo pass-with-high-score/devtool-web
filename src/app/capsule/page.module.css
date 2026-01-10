@@ -1,0 +1,491 @@
+/* Time Capsule Page - Neo-Brutalism Style */
+
+.container {
+    min-height: 100vh;
+    position: relative;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #FFFEF0 0%, #FFF8DC 50%, #FFFACD 100%);
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    padding: 2rem 1.5rem 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.logoIcon {
+    width: 56px;
+    height: 56px;
+    background: var(--neo-pink);
+    border: 4px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.logo h1 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+}
+
+.tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+/* Main */
+.main {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 3rem;
+}
+
+/* Upload Card */
+.uploadCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Drop Zone */
+.dropZone {
+    border: 3px dashed var(--neo-black);
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 1.5rem;
+    background: var(--bg-primary);
+}
+
+.dropZone:hover,
+.dropZoneActive {
+    background: var(--neo-yellow);
+    border-style: solid;
+}
+
+.fileInput {
+    display: none;
+}
+
+.dropPrompt {
+    color: var(--text-muted);
+}
+
+.uploadIcon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.dropHint {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+/* File Preview */
+.filePreview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.fileIcon {
+    font-size: 2rem;
+}
+
+.fileName {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    word-break: break-all;
+}
+
+.fileSize {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Form */
+.formGroup {
+    margin-bottom: 1.5rem;
+}
+
+.label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+
+/* Duration Picker */
+.durationPicker {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.durationButton {
+    padding: 0.75rem 1.25rem;
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    background: var(--neo-white);
+    cursor: pointer;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+}
+
+.durationButton:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.durationButtonActive {
+    background: var(--neo-pink);
+    color: var(--neo-white);
+}
+
+.customDuration {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.customInput {
+    width: 80px;
+    padding: 0.5rem;
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0px var(--neo-black);
+    font-size: 1rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.customInput:focus {
+    outline: none;
+    border-color: var(--neo-cyan);
+}
+
+/* Error */
+.error {
+    background: var(--neo-red);
+    color: var(--neo-white);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 3px solid var(--neo-black);
+    font-weight: 600;
+}
+
+/* Progress */
+.progressContainer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.progressBar {
+    flex: 1;
+    height: 20px;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: var(--neo-green);
+    transition: width 0.3s;
+}
+
+.progressText {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    min-width: 40px;
+}
+
+/* Upload Button */
+.uploadButton {
+    width: 100%;
+    padding: 1rem 2rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: var(--neo-green);
+    color: var(--neo-black);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.uploadButton:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px var(--neo-black);
+}
+
+.uploadButton:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
+.uploadButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Success Card */
+.successCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 2rem;
+    text-align: center;
+}
+
+.successIcon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.successTitle {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.successText {
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.unlockDate {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+}
+
+/* Link Box */
+.linkBox {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.linkInput {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 3px solid var(--neo-black);
+    font-family: 'Consolas', monospace;
+    font-size: 0.85rem;
+}
+
+.copyButton {
+    padding: 0.75rem 1.25rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copyButton:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+/* Success Actions */
+.successActions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.viewButton {
+    padding: 1rem 2rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    text-decoration: none;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+}
+
+.viewButton:hover {
+    background: var(--neo-green);
+    color: var(--neo-black);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.newButton {
+    padding: 1rem 2rem;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.newButton:hover {
+    background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+/* Features Section */
+.features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.feature {
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    padding: 1.25rem;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.feature:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.featureIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+}
+
+.feature h4 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    margin: 0 0 0.25rem 0;
+}
+
+.feature p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header {
+        padding: 1.5rem 1rem;
+    }
+
+    .logo h1 {
+        font-size: 1.5rem;
+    }
+
+    .main {
+        padding: 1rem;
+    }
+
+    .uploadCard,
+    .successCard {
+        padding: 1.25rem;
+    }
+
+    .dropZone {
+        padding: 2rem 1rem;
+    }
+
+    .durationButton {
+        padding: 0.5rem 1rem;
+        font-size: 0.7rem;
+    }
+
+    .features {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .linkBox {
+        flex-direction: column;
+    }
+
+    .successActions {
+        flex-direction: column;
+    }
+
+    .viewButton,
+    .newButton {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .features {
+        grid-template-columns: 1fr;
+    }
+}
