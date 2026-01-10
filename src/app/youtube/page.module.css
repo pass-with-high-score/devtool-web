@@ -126,6 +126,31 @@
     font-weight: 600;
 }
 
+.thumbnailBtn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-cyan);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    opacity: 0;
+}
+
+.videoThumbnail:hover .thumbnailBtn {
+    opacity: 1;
+}
+
+.thumbnailBtn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 2px 2px 0px var(--neo-black);
+}
+
 .videoDetails {
     padding: 1.25rem;
 }
@@ -365,6 +390,43 @@
     font-size: 0.75rem;
     color: var(--neo-black);
     font-weight: 600;
+}
+
+/* Subtitle Selector */
+.subtitleSelector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+}
+
+.subtitleCheckbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.subtitleCheckbox input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--neo-black);
+    cursor: pointer;
+}
+
+.subtitleLangSelect {
+    padding: 0.5rem 0.75rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
 }
 
 .qualityBtn {
