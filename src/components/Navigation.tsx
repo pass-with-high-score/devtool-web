@@ -15,6 +15,7 @@ import {
     HourglassIcon,
     ChevronDownIcon,
     UploadIcon,
+    FileIcon,
 } from './Icons';
 import styles from './Navigation.module.css';
 
@@ -35,6 +36,7 @@ const coreTools: NavItem[] = [
 
 // More tools - in dropdown on desktop, visible on mobile menu
 const moreTools: NavItem[] = [
+    { href: '/transfer', label: 'Transfer', icon: <FileIcon size={18} /> },
     { href: '/base64', label: 'Base64', icon: <ImageIcon size={18} /> },
     { href: '/capsule', label: 'Capsule', icon: <HourglassIcon size={18} /> },
     { href: '/aneko-builder', label: 'ANeko', icon: <Image src="/aneko.png" alt="ANeko" width={18} height={18} style={{ imageRendering: 'pixelated' }} /> },

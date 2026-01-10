@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -60,11 +60,18 @@ const tools: Tool[] = [
         color: 'cyan',
     },
     {
+        href: '/transfer',
+        title: 'File Transfer',
+        description: 'Share any file with download link. Like WeTransfer, but simpler.',
+        icon: <FileIcon size={32} />,
+        color: 'pink',
+    },
+    {
         href: '/capsule',
         title: 'Time Capsule',
         description: 'Upload files and lock them for a set time. Download only after the unlock date.',
         icon: <HourglassIcon size={32} />,
-        color: 'pink',
+        color: 'orange',
     },
     {
         href: '/aneko-builder',

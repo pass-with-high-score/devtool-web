@@ -117,6 +117,26 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_time_capsules_unlock_at 
     ON time_capsules(unlock_at)
   `;
+
+  // File Transfers table for file sharing
+  await sql`
+    CREATE TABLE IF NOT EXISTS file_transfers (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      object_key TEXT NOT NULL UNIQUE,
+      filename TEXT NOT NULL,
+      file_size BIGINT NOT NULL,
+      content_type TEXT,
+      expires_at TIMESTAMPTZ NOT NULL,
+      max_downloads INTEGER,
+      download_count INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_file_transfers_expires_at 
+    ON file_transfers(expires_at)
+  `;
 }
 
 // Cleanup old endpoints (7 days inactive)
@@ -132,5 +152,13 @@ export async function cleanupExpiredJsonBins() {
   await sql`
     DELETE FROM json_bins 
     WHERE expires_at IS NOT NULL AND expires_at < NOW()
+  `;
+}
+
+// Cleanup expired file transfers
+export async function cleanupExpiredTransfers() {
+  await sql`
+    DELETE FROM file_transfers 
+    WHERE expires_at < NOW()
   `;
 }
