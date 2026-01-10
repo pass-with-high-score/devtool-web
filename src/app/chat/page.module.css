@@ -1,0 +1,84 @@
+/* Chat Page Styles */
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #FFFEF0 0%, #FFF8DC 50%, #FFFACD 100%);
+    z-index: -1;
+}
+
+.header {
+    padding: 2rem;
+    text-align: center;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: var(--neo-black);
+    transition: all 0.15s ease;
+    margin-bottom: 1.5rem;
+}
+
+.backLink:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.title {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 4px 4px 0px var(--neo-cyan);
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.main {
+    flex: 1;
+    padding: 0 2rem 2rem;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.footer {
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+    .header {
+        padding: 1.5rem 1rem;
+    }
+
+    .title {
+        font-size: 1.75rem;
+    }
+
+    .main {
+        padding: 0 1rem 1rem;
+    }
+}

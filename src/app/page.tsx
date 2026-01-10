@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { SearchIcon, KeyIcon, ImageIcon, BoltIcon, ShieldIcon, SmartphoneIcon, GithubIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon } from '@/components/Icons';
-import ChatWidget from '@/components/ChatWidget';
 import styles from './page.module.css';
 
 // Note: metadata must be exported from a server component
@@ -80,6 +79,13 @@ const tools: Tool[] = [
         description: 'Create custom skins for ANeko Reborn Android pet app with visual animation editor.',
         icon: <Image src="/aneko.png" alt="ANeko" width={32} height={32} style={{ imageRendering: 'smooth' }} />,
         color: 'yellow',
+    },
+    {
+        href: '/chat',
+        title: 'Community Chat',
+        description: 'Real-time anonymous chat with other developers. No signup required.',
+        icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+        color: 'cyan',
     },
 ];
 
@@ -173,18 +179,14 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Chat Section */}
-            <section className={styles.chatSection}>
-                <h2 className={styles.chatSectionTitle}>Community Chat</h2>
-                <p className={styles.chatSectionSubtitle}>Say hi to other developers!</p>
-                <ChatWidget />
-            </section>
-
             {/* Footer */}
             <footer className={styles.footer}>
                 <div className={styles.footerLinks}>
                     <p>© 2026 DevTools. Open Source.</p>
                     <div style={{ display: 'flex', gap: '1.5rem' }}>
+                        <Link href="/chat" className={styles.policyLink}>
+                            Community Chat
+                        </Link>
                         <Link href="/about" className={styles.policyLink}>
                             About
                         </Link>
