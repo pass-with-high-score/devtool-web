@@ -21,15 +21,19 @@ export default function StateList({ onEditState }: StateListProps) {
     // Auto-initialize required states when skin is empty
     useEffect(() => {
         if (!initialized && state.skinData.states.length === 0) {
+            const existingIds = new Set(state.skinData.states.map(s => s.state));
             REQUIRED_STATES.forEach(stateDef => {
-                const newState: MotionState = {
-                    state: stateDef.id,
-                    items: [],
-                    checkMove: stateDef.checkMove,
-                    checkWall: stateDef.checkWall,
-                    nextState: stateDef.nextState,
-                };
-                addState(newState);
+                if (!existingIds.has(stateDef.id)) {
+                    const newState: MotionState = {
+                        state: stateDef.id,
+                        items: [],
+                        checkMove: stateDef.checkMove,
+                        checkWall: stateDef.checkWall,
+                        nextState: stateDef.nextState,
+                    };
+                    addState(newState);
+                    existingIds.add(stateDef.id);
+                }
             });
             setInitialized(true);
         }

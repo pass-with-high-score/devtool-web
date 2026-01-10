@@ -152,12 +152,18 @@ function SkinBuilderContent() {
                 </div>
                 <div className={styles.metadataField}>
                     <label>Icon (Preview)</label>
-                    <input
-                        type="text"
+                    <select
                         value={state.skinData.metadata.preview}
                         onChange={(e) => setMetadata({ preview: e.target.value })}
-                        placeholder="icon"
-                    />
+                        className={styles.iconSelect}
+                    >
+                        <option value="">-- Select asset --</option>
+                        {state.skinData.assets.map((asset) => (
+                            <option key={asset.id} value={asset.filename.replace(/\.(png|jpg|jpeg|gif)$/i, '')}>
+                                {asset.filename}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
 

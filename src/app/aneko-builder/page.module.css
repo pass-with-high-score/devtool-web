@@ -114,16 +114,19 @@
     color: var(--text-muted);
 }
 
-.metadataField input {
+.metadataField input,
+.metadataField select {
     padding: 0.5rem 0.75rem;
     font-size: 0.9rem;
     font-weight: 600;
     background: var(--bg-primary);
     border: 3px solid var(--neo-black);
     outline: none;
+    cursor: pointer;
 }
 
-.metadataField input:focus {
+.metadataField input:focus,
+.metadataField select:focus {
     background: var(--neo-yellow);
 }
 
