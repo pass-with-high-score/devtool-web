@@ -22,3 +22,6 @@ jobs:
             git pull origin main
             chmod +x deploy.sh
             ./deploy.sh
+            cd backend
+            chmod +x deploy.sh
+            ./deploy.sh

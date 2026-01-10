@@ -41,6 +41,10 @@ export default function PolicyPage() {
                         <li><strong>Base64 Converter:</strong> Image processing happens 100% locally. Your files are never uploaded to our servers.</li>
                         <li><strong>JSON Server:</strong> Data you explicitly save is stored in our database to generate a shareable URL. We do not analyze this data.</li>
                         <li><strong>Webhook Tester:</strong> Request data sent to your unique webhook URL is stored temporarily for your inspection. We do not use this data for any other purpose.</li>
+                        <li><strong>Image Uploader:</strong> Uploaded images are stored on our servers to generate shareable links. Images may be deleted after a period of inactivity.</li>
+                        <li><strong>File Transfer:</strong> Files you upload are stored temporarily on our servers to provide download links. Files are automatically deleted after the expiration time you set.</li>
+                        <li><strong>Time Capsule:</strong> Files and messages are encrypted and stored on our servers until the unlock date. After unlocking, data may be deleted after a period of inactivity.</li>
+                        <li><strong>ANeko Builder:</strong> All skin editing happens 100% locally in your browser. We do not upload or store any of your skin files.</li>
                     </ul>
 
                     <h3>2. Local Storage</h3>
