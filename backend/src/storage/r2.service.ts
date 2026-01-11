@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, DeleteObjectCommand, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
 
@@ -51,30 +52,58 @@ export class R2Service {
     }
 
     /**
-     * Upload an object from file path using streaming (memory efficient)
+     * Upload an object from file path using multipart upload with progress tracking
      * @param objectKey - The object key (path) in R2
      * @param filePath - Local file path to upload
      * @param contentType - MIME type
+     * @param onProgress - Optional progress callback (0-100)
      * @returns The file size in bytes
      */
-    async uploadObjectFromFile(objectKey: string, filePath: string, contentType: string): Promise<number> {
+    async uploadObjectFromFile(
+        objectKey: string,
+        filePath: string,
+        contentType: string,
+        onProgress?: (percent: number) => void
+    ): Promise<number> {
         const fs = await import('fs');
         const { stat } = await import('fs/promises');
 
         try {
             const fileStats = await stat(filePath);
             const fileSize = fileStats.size;
+
+            // Create read stream
             const stream = fs.createReadStream(filePath);
 
-            const command = new PutObjectCommand({
-                Bucket: this.bucket,
-                Key: objectKey,
-                Body: stream,
-                ContentType: contentType,
-                ContentLength: fileSize,
+            // Use Upload for multipart upload with progress tracking
+            const upload = new Upload({
+                client: this.r2Client,
+                params: {
+                    Bucket: this.bucket,
+                    Key: objectKey,
+                    Body: stream,
+                    ContentType: contentType,
+                },
+                // 5MB part size for efficient multipart
+                partSize: 5 * 1024 * 1024,
+                // Leave concurrent uploads at 1 for R2 compatibility
+                leavePartsOnError: false,
             });
 
-            await this.r2Client.send(command);
+            // Track upload progress
+            upload.on('httpUploadProgress', (progress) => {
+                if (onProgress && progress.loaded && progress.total) {
+                    const percent = Math.min(99, Math.floor((progress.loaded / progress.total) * 100));
+                    onProgress(percent);
+                }
+            });
+
+            await upload.done();
+
+            if (onProgress) {
+                onProgress(100);
+            }
+
             this.logger.debug(`Uploaded object from file: ${objectKey} (${(fileSize / 1024 / 1024).toFixed(2)} MB)`);
             return fileSize;
         } catch (error) {

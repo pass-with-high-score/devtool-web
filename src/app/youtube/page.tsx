@@ -1127,7 +1127,9 @@ export default function YouTubePage() {
                                         {downloadResult?.status === 'queued' && downloadResult.queuePosition
                                             ? `Queued (Position ${downloadResult.queuePosition})`
                                             : downloadResult?.status === 'uploading'
-                                                ? 'Uploading to cloud...'
+                                                ? downloadResult?.progress !== undefined && downloadResult.progress > 100
+                                                    ? `Uploading... ${downloadResult.progress - 101}%`
+                                                    : 'Uploading to cloud...'
                                                 : downloadResult?.progress !== undefined && downloadResult.progress > 0
                                                     ? downloadResult.progress >= 100
                                                         ? 'Processing video...'

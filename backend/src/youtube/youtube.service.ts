@@ -763,6 +763,8 @@ export class YouTubeService implements OnModuleInit {
                 const proc = spawn(this.ytdlpPath, args);
                 let stderr = '';
                 let lastLoggedProgress = -1;
+                let downloadedFileCount = 0; // Track how many files downloaded
+                let currentFileProgress = 0; // Progress of current file
 
                 this.logger.log(`🚀 [${id}] yt-dlp process started (PID: ${proc.pid})`);
 
@@ -770,9 +772,22 @@ export class YouTubeService implements OnModuleInit {
                     const text = data.toString();
                     stderr += text;
 
+                    // Detect new file download starting
+                    if (text.includes('[download] Destination:')) {
+                        downloadedFileCount++;
+                        currentFileProgress = 0;
+                        this.logger.log(`📦 [${id}] Downloading file ${downloadedFileCount}...`);
+                    }
+
                     // Log important yt-dlp messages
-                    if (text.includes('[download]') || text.includes('[merger]') || text.includes('[ExtractAudio]')) {
+                    if (text.includes('[download]') || text.includes('[Merger]') || text.includes('[ExtractAudio]')) {
                         this.logger.debug(`📥 [${id}] ${text.trim()}`);
+
+                        // Detect merge/processing phase
+                        if (text.includes('[Merger]')) {
+                            this.progressMap.set(id, 100);
+                            this.emitProgress(id);
+                        }
                     }
 
                     // Parse progress - handle both yt-dlp and aria2c formats
@@ -797,18 +812,25 @@ export class YouTubeService implements OnModuleInit {
 
                     if (progress > 0) {
                         progress = Math.min(progress, 100);
-                        const currentProgress = this.progressMap.get(id) || 0;
-                        // Only update if higher (avoid going backwards between video/audio)
-                        if (progress > currentProgress || progress === 100) {
-                            this.progressMap.set(id, progress);
-                            // Emit SSE event
-                            this.emitProgress(id);
+                        currentFileProgress = progress;
+
+                        // For multi-file downloads: show combined progress
+                        // File 1 = 0-50%, File 2 = 50-100%
+                        let displayProgress = progress;
+                        if (downloadedFileCount === 1) {
+                            displayProgress = Math.floor(progress / 2); // First file: 0-50%
+                        } else if (downloadedFileCount === 2) {
+                            displayProgress = 50 + Math.floor(progress / 2); // Second file: 50-100%
                         }
 
+                        this.progressMap.set(id, displayProgress);
+                        // Emit SSE event
+                        this.emitProgress(id);
+
                         // Log every 25% progress
-                        if (progress >= lastLoggedProgress + 25) {
-                            this.logger.log(`📊 [${id}] Progress: ${progress}%`);
-                            lastLoggedProgress = progress;
+                        if (displayProgress >= lastLoggedProgress + 25) {
+                            this.logger.log(`📊 [${id}] Progress: ${displayProgress}%`);
+                            lastLoggedProgress = displayProgress;
                         }
                     }
                 });
@@ -816,6 +838,14 @@ export class YouTubeService implements OnModuleInit {
                 proc.stdout.on('data', (data) => {
                     const text = data.toString();
                     this.logger.debug(`yt-dlp: ${text.trim()}`);
+
+                    // Detect new file download from stdout (aria2c)
+                    if (text.includes('[download] Destination:') || text.includes('FILE:')) {
+                        if (!text.includes('.part')) { // Ignore .part file lines
+                            downloadedFileCount++;
+                            currentFileProgress = 0;
+                        }
+                    }
 
                     // Parse progress from stdout (aria2c outputs here)
                     // Get ALL matches and take highest for multi-line chunks
@@ -836,17 +866,18 @@ export class YouTubeService implements OnModuleInit {
 
                     if (progress > 0) {
                         progress = Math.min(progress, 100);
-                        const currentProgress = this.progressMap.get(id) || 0;
-                        if (progress > currentProgress || progress === 100) {
-                            this.progressMap.set(id, progress);
-                            // Emit SSE event
-                            this.emitProgress(id);
-                            // Log progress from stdout
-                            if (progress >= lastLoggedProgress + 25) {
-                                this.logger.log(`📊 [${id}] Progress: ${progress}%`);
-                                lastLoggedProgress = progress;
-                            }
+                        currentFileProgress = progress;
+
+                        // For multi-file downloads: show combined progress
+                        let displayProgress = progress;
+                        if (downloadedFileCount === 1) {
+                            displayProgress = Math.floor(progress / 2);
+                        } else if (downloadedFileCount >= 2) {
+                            displayProgress = 50 + Math.floor(progress / 2);
                         }
+
+                        this.progressMap.set(id, displayProgress);
+                        this.emitProgress(id);
                     }
                 });
 
@@ -908,14 +939,31 @@ export class YouTubeService implements OnModuleInit {
             const contentType = contentTypeMap[ext] || (request.formatType === 'video' ? 'video/mp4' : 'audio/mpeg');
 
             this.logger.log(`☁️ [${id}] Uploading to R2 (streaming)...`);
-            // Set progress > 100 to indicate uploading phase
+            // Set progress > 100 to indicate uploading phase (101-200 = uploading 0-99%)
             this.progressMap.set(id, 101);
             await this.databaseService.sql`
                 UPDATE youtube_downloads SET status = 'uploading' WHERE id = ${id}
             `;
             // Emit SSE event for upload phase
             this.emitProgress(id);
-            const fileSize = await this.r2Service.uploadObjectFromFile(objectKey, downloadedFile, contentType);
+
+            // Upload with progress callback
+            let lastUploadPercent = -1;
+            const fileSize = await this.r2Service.uploadObjectFromFile(
+                objectKey,
+                downloadedFile,
+                contentType,
+                (percent) => {
+                    // Map upload percent to 101-200 range (101 = 0%, 200 = 99%)
+                    this.progressMap.set(id, 101 + percent);
+                    // Emit every 5% for smoother updates
+                    if (percent >= lastUploadPercent + 5 || percent === 100) {
+                        this.logger.log(`📤 [${id}] Upload progress: ${percent}%`);
+                        this.emitProgress(id);
+                        lastUploadPercent = percent;
+                    }
+                }
+            );
             this.logger.log(`☁️ [${id}] Upload complete!`);
 
             // Cleanup temp files (downloaded file + any player-script.js debug files)
@@ -1014,7 +1062,10 @@ export class YouTubeService implements OnModuleInit {
             videoId: record.video_id,
             title: record.title,
             status: record.status,
-            progress: record.status === 'processing' ? (liveProgress || 0) : (record.status === 'completed' ? 100 : 0),
+            // Get live progress for processing and uploading statuses
+            progress: (record.status === 'processing' || record.status === 'uploading')
+                ? (liveProgress || 0)
+                : (record.status === 'completed' ? 100 : 0),
             fileSize: record.file_size ? parseInt(record.file_size) : undefined,
             filename: record.filename || undefined,
             downloadUrl: record.status === 'completed' ? `/youtube/${id}/file` : undefined,
