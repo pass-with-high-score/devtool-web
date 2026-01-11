@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
-import { PlayIcon, MusicIcon, DownloadIcon, SearchIcon, ClockIcon, CopyIcon, XIcon, ScissorsIcon, WarningIcon, ImageIcon, ListIcon, ChevronUpIcon, ChevronDownIcon, SkipForwardIcon, ArrowUpIcon, ArrowDownIcon, ArrowRightIcon, LightbulbIcon, BookOpenIcon, CheckCircleIcon, XCircleIcon, HourglassWaitIcon } from '@/components/Icons';
+import { PlayIcon, MusicIcon, DownloadIcon, SearchIcon, ClockIcon, CopyIcon, XIcon, ScissorsIcon, WarningIcon, ImageIcon, ListIcon, ChevronUpIcon, ChevronDownIcon, SkipForwardIcon, ArrowUpIcon, ArrowDownIcon, ArrowRightIcon, LightbulbIcon, BookOpenIcon, CheckCircleIcon, XCircleIcon, HourglassWaitIcon, BoltIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL || 'http://localhost:3001';
@@ -26,6 +26,11 @@ interface FormatOption {
     quality: string;
     value: string;
     filesize?: number;
+    directLink?: {
+        url: string;
+        filename: string;
+        expiresIn: string;
+    };
 }
 
 interface SubtitleInfo {
@@ -84,7 +89,6 @@ interface DownloadResult {
     fileSize?: number;
     filename?: string;
     error?: string;
-    queuePosition?: number;
 }
 
 const VIDEO_FORMATS = [
@@ -181,23 +185,6 @@ export default function YouTubePage() {
             if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
         }
         return parseFloat(time) || 0;
-    };
-
-    // Calculate estimated clip size based on duration ratio
-    const getEstimatedClipSize = (fullSize: number | undefined): number | undefined => {
-        if (!fullSize || !videoInfo) return fullSize;
-        if (!startTime && !endTime) return fullSize;
-
-        const fullDuration = videoInfo.duration;
-        if (!fullDuration) return fullSize;
-
-        const startSec = parseTimeToSeconds(startTime);
-        const endSec = endTime ? parseTimeToSeconds(endTime) : fullDuration;
-        const clipDuration = Math.max(0, Math.min(endSec, fullDuration) - startSec);
-
-        // Calculate proportional size
-        const ratio = clipDuration / fullDuration;
-        return Math.round(fullSize * ratio);
     };
 
     // Load and cleanup history on mount
@@ -377,6 +364,7 @@ export default function YouTubePage() {
 
                 if (data.error) {
                     eventSource.close();
+                    setDownloadResult(data);
                     setIsDownloading(false);
                     addToast(data.error, 'error');
                     return;
@@ -406,6 +394,7 @@ export default function YouTubePage() {
                 } else if (data.status === 'failed') {
                     eventSource.close();
                     setIsDownloading(false);
+                    setDownloadResult(data);
                     addToast(data.error || 'Download failed', 'error');
                     if (activePlaylistInfo && videoInfo) {
                         setShouldMoveToNext(true);
@@ -414,27 +403,6 @@ export default function YouTubePage() {
             } catch {
                 // Ignore parse errors
             }
-        };
-
-        eventSource.onerror = () => {
-            eventSource.close();
-            // Fallback: check status once via REST
-            fetch(`${API_BASE}/youtube/${id}`)
-                .then(res => res.json())
-                .then(data => {
-                    setDownloadResult(data);
-                    if (data.status === 'completed') {
-                        setIsDownloading(false);
-                        addToast('Download ready!', 'success');
-                    } else if (data.status === 'failed') {
-                        setIsDownloading(false);
-                        addToast(data.error || 'Download failed', 'error');
-                    }
-                })
-                .catch(() => {
-                    setIsDownloading(false);
-                    addToast('Connection lost', 'error');
-                });
         };
     };
 
@@ -499,7 +467,11 @@ export default function YouTubePage() {
 
     const handleFileDownload = () => {
         if (downloadResult?.downloadUrl) {
-            window.open(`${API_BASE}${downloadResult.downloadUrl}`, '_blank');
+            // Fast download URLs start with http, standard URLs are relative paths
+            const url = downloadResult.downloadUrl.startsWith('http')
+                ? downloadResult.downloadUrl
+                : `${API_BASE}${downloadResult.downloadUrl}`;
+            window.open(url, '_blank');
         }
     };
 
@@ -533,6 +505,84 @@ export default function YouTubePage() {
         const minutes = Math.floor(remaining / 60000);
         if (minutes < 60) return `${minutes}m left`;
         return `${Math.floor(minutes / 60)}h ${minutes % 60}m left`;
+    };
+
+    // Get currently selected format option
+    const getSelectedFormat = (): FormatOption | undefined => {
+        const formats = formatType === 'video' ? videoInfo?.videoFormats : videoInfo?.audioFormats;
+        return formats?.find(f => f.quality === selectedQuality);
+    };
+
+    // Check if format is eligible for direct link (video ≤720p or audio)
+    const isEligibleForDirectLink = (): boolean => {
+        // Not eligible if using clip, subtitles, or sponsorblock
+        if (startTime || endTime || sponsorBlock || embedSubtitles) return false;
+
+        if (formatType === 'audio') {
+            // Audio direct link only works with native formats
+            return ['m4a', 'webm', 'opus'].includes(outputFormat);
+        } else {
+            // Video direct link only for ≤720p AND mp4 format (YouTube serves mp4)
+            // MKV/WebM require FFmpeg conversion
+            if (outputFormat !== 'mp4') return false;
+            const height = parseInt(getSelectedFormat()?.value || '0');
+            return height > 0 && height <= 720;
+        }
+    };
+
+    // Smart download handler - tries direct link first, falls back to yt-dlp
+    const handleSmartDownload = async () => {
+        if (!videoInfo || !selectedQuality) return;
+
+        // Check if eligible for fast direct link
+        if (isEligibleForDirectLink()) {
+            setIsDownloading(true);
+            setDownloadResult({ id: 'direct', videoId: videoInfo.videoId, title: videoInfo.title, status: 'processing', progress: 0 });
+            addToast('⚡ Getting direct link...', 'success');
+
+            try {
+                // Try to get direct link
+                const format = getSelectedFormat();
+                const quality = formatType === 'audio'
+                    ? (format?.value === 'bestaudio' ? 'best' : format?.value || 'best')
+                    : (format?.value || '720') + 'p';
+
+                const res = await fetch(`${API_BASE}/youtube/direct-link?url=${encodeURIComponent(url)}&formatType=${formatType}&quality=${quality}`);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.directUrl) {
+                        // Success! Store direct link for "Get File" button
+                        const proxyUrl = `${API_BASE}/youtube/proxy-download?url=${encodeURIComponent(data.directUrl)}&filename=${encodeURIComponent(data.filename)}`;
+
+                        setIsDownloading(false);
+                        // Set completed status with direct link URL
+                        setDownloadResult({
+                            id: 'direct',
+                            videoId: videoInfo.videoId,
+                            title: videoInfo.title,
+                            status: 'completed',
+                            progress: 100,
+                            downloadUrl: proxyUrl, // Store proxy URL for "Get File" button
+                            fileSize: data.filesize || undefined,
+                        });
+
+                        addToast('⚡ Fast download ready!', 'success');
+                        return;
+                    }
+                }
+            } catch {
+                // Direct link failed, continue to fallback
+            }
+
+            // Fallback to standard download
+            addToast('Cannot get direct link, fallback to standard download...', 'info');
+            setIsDownloading(false);
+            setDownloadResult(null);
+        }
+
+        // Standard download via yt-dlp
+        handleDownload();
     };
 
     const currentFormats = formatType === 'video' ? videoInfo?.videoFormats : videoInfo?.audioFormats;
@@ -1104,41 +1154,52 @@ export default function YouTubePage() {
 
                             {/* Quality Options */}
                             <div className={styles.qualityOptions}>
-                                {currentFormats?.map((format) => (
-                                    <button
-                                        key={format.quality}
-                                        className={`${styles.qualityBtn} ${selectedQuality === format.quality ? styles.selected : ''}`}
-                                        onClick={() => setSelectedQuality(format.quality)}
-                                        disabled={isDownloading}
-                                    >
-                                        <span className={styles.qualityLabel}>{format.quality}</span>
-                                        {format.filesize && (
-                                            <span className={styles.qualitySize}>{formatSize(getEstimatedClipSize(format.filesize) ?? null)}</span>
-                                        )}
-                                    </button>
-                                ))}
+                                {currentFormats?.map((format) => {
+                                    // Check if this format could use direct link (no clips, no sponsorblock, no subtitle embed, compatible format)
+                                    const height = parseInt(format.value) || 0;
+                                    const canUseDirect = !startTime && !endTime && !sponsorBlock && !embedSubtitles &&
+                                        (formatType === 'audio'
+                                            ? ['m4a', 'webm', 'opus'].includes(outputFormat)
+                                            : (outputFormat === 'mp4' && height > 0 && height <= 720));
+                                    return (
+                                        <button
+                                            key={format.quality}
+                                            className={`${styles.qualityBtn} ${selectedQuality === format.quality ? styles.selected : ''} ${canUseDirect ? styles.fastAvailable : ''}`}
+                                            onClick={() => setSelectedQuality(format.quality)}
+                                            disabled={isDownloading}
+                                        >
+                                            <span className={styles.qualityLabel}>
+                                                {format.quality}
+                                                {canUseDirect && <span className={styles.fastBadge}><BoltIcon size={12} /></span>}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
 
                             {/* Download Button */}
                             <button
-                                className={styles.downloadBtn}
-                                onClick={handleDownload}
+                                className={`${styles.downloadBtn} ${isEligibleForDirectLink() ? styles.fastDownload : ''}`}
+                                onClick={handleSmartDownload}
                                 disabled={!selectedQuality || isDownloading}
                             >
                                 {isDownloading ? (
                                     <>
                                         <div className={styles.spinner}></div>
-                                        {downloadResult?.status === 'queued' && downloadResult.queuePosition
-                                            ? `Queued (Position ${downloadResult.queuePosition})`
-                                            : downloadResult?.status === 'uploading'
-                                                ? downloadResult?.progress !== undefined && downloadResult.progress > 100
-                                                    ? `Uploading... ${downloadResult.progress - 101}%`
-                                                    : 'Uploading to cloud...'
-                                                : downloadResult?.progress !== undefined && downloadResult.progress > 0
-                                                    ? downloadResult.progress >= 100
-                                                        ? 'Processing video...'
-                                                        : `Downloading... ${downloadResult.progress}%`
-                                                    : 'Starting...'}
+                                        {downloadResult?.status === 'uploading'
+                                            ? downloadResult?.progress !== undefined && downloadResult.progress > 100
+                                                ? `Uploading... ${downloadResult.progress - 101}%`
+                                                : 'Uploading to cloud...'
+                                            : downloadResult?.progress !== undefined && downloadResult.progress > 0
+                                                ? downloadResult.progress >= 100
+                                                    ? 'Processing video...'
+                                                    : `Downloading... ${downloadResult.progress}%`
+                                                : 'Starting...'}
+                                    </>
+                                ) : isEligibleForDirectLink() ? (
+                                    <>
+                                        <BoltIcon size={20} />
+                                        Fast Download
                                     </>
                                 ) : (
                                     <>

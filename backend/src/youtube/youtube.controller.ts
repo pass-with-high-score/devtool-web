@@ -6,11 +6,10 @@ import {
     Body,
     Param,
     Res,
-    Headers,
     BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { DownloadRequest, DownloadResult, VideoInfo, PlaylistInfo, YouTubeService } from './youtube.service';
+import { DownloadRequest, DownloadResult, VideoInfo, PlaylistInfo, DirectLinkResult, YouTubeService } from './youtube.service';
 
 
 @Controller('youtube')
@@ -40,10 +39,36 @@ export class YouTubeController {
     }
 
     /**
+     * Get direct download link for low-quality videos or audio
+     * - Video: 720p and below (combined video+audio streams)
+     * - Audio: any quality (bestaudio, 128kbps, 192kbps, etc.)
+     * Saves server bandwidth compared to download-then-serve approach
+     */
+    @Get('direct-link')
+    async getDirectLink(
+        @Query('url') url: string,
+        @Query('formatType') formatType: 'video' | 'audio',
+        @Query('quality') quality: string,
+    ): Promise<DirectLinkResult> {
+        if (!url) {
+            throw new BadRequestException('URL is required');
+        }
+        if (!formatType || !['video', 'audio'].includes(formatType)) {
+            throw new BadRequestException('formatType must be "video" or "audio"');
+        }
+        if (!quality) {
+            throw new BadRequestException('quality is required (e.g., 720p, 360p for video or bestaudio, 128kbps for audio)');
+        }
+        return this.youtubeService.getDirectLink(url, formatType, quality);
+    }
+
+    /**
      * Start download with selected format
      */
     @Post('download')
-    async startDownload(@Body() request: DownloadRequest): Promise<DownloadResult> {
+    async startDownload(
+        @Body() request: DownloadRequest,
+    ): Promise<DownloadResult> {
         if (!request.url) {
             throw new BadRequestException('URL is required');
         }
@@ -53,7 +78,69 @@ export class YouTubeController {
         if (!request.quality) {
             throw new BadRequestException('quality is required');
         }
+
         return this.youtubeService.startDownload(request);
+    }
+
+    /**
+     * Proxy download endpoint - streams YouTube content with proper download headers
+     * This ensures the browser downloads the file instead of opening in a new tab
+     * MUST be placed before :id route to avoid route conflict
+     */
+    @Get('proxy-download')
+    async proxyDownload(
+        @Query('url') url: string,
+        @Query('filename') filename: string,
+        @Res() res: Response,
+    ): Promise<void> {
+        if (!url) {
+            throw new BadRequestException('URL is required');
+        }
+        if (!filename) {
+            throw new BadRequestException('Filename is required');
+        }
+
+        try {
+            // Fetch the video/audio from YouTube CDN
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch: ${response.status}`);
+            }
+
+            // Set proper headers for download
+            const contentType = response.headers.get('content-type') || 'application/octet-stream';
+            const contentLength = response.headers.get('content-length');
+
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+            if (contentLength) {
+                res.setHeader('Content-Length', contentLength);
+            }
+
+            // Pipe the stream directly to response (no storage)
+            const reader = response.body?.getReader();
+            if (!reader) {
+                throw new Error('Failed to get reader');
+            }
+
+            const pump = async () => {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    res.write(value);
+                }
+                res.end();
+            };
+
+            pump().catch(() => res.end());
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to download' });
+        }
     }
 
     /**

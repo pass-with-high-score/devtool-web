@@ -1039,9 +1039,28 @@
     font-size: 0.85rem;
 }
 
-.qualitySize {
-    font-size: 0.75rem;
-    color: var(--text-muted);
+/* Fast Badge for Direct Link */
+.fastBadge {
+    margin-left: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    color: #f59e0b;
+    /* amber/gold color */
+}
+
+.qualityBtn.fastAvailable {
+    border-color: #f59e0b;
+}
+
+.qualityBtn.fastAvailable.selected {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: var(--neo-black);
+}
+
+/* Fast Download Button */
+.downloadBtn.fastDownload {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: var(--neo-black);
 }
 
 /* Download Button */

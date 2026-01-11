@@ -11,6 +11,13 @@ export interface FormatOption {
     quality: string;
     value: string;
     filesize?: number; // Estimated file size in bytes
+    directLink?: DirectLinkInfo; // Direct download link if available
+}
+
+export interface DirectLinkInfo {
+    url: string;
+    filename: string;
+    expiresIn: string;
 }
 
 export interface SubtitleInfo {
@@ -80,6 +87,16 @@ export interface DownloadResult {
     queuePosition?: number;
 }
 
+export interface DirectLinkResult {
+    videoId: string;
+    title: string;
+    directUrl: string;
+    filename: string;
+    filesize?: number;
+    quality: string;
+    expiresIn: string; // e.g., "6 hours"
+}
+
 interface YtDlpVideoInfo {
     id: string;
     title: string;
@@ -101,12 +118,6 @@ interface YtDlpVideoInfo {
     chapters?: Array<{ title: string; start_time: number; end_time: number }>;
 }
 
-interface QueuedDownload {
-    id: string;
-    request: DownloadRequest;
-    title: string;
-}
-
 @Injectable()
 export class YouTubeService implements OnModuleInit {
     private readonly logger = new Logger(YouTubeService.name);
@@ -115,11 +126,12 @@ export class YouTubeService implements OnModuleInit {
     // In-memory progress tracking (faster than DB updates)
     private progressMap = new Map<string, number>();
 
-    // Download queue system
-    private readonly MAX_CONCURRENT_DOWNLOADS = 3;
-    private readonly MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB limit
-    private activeDownloads = 0;
-    private downloadQueue: QueuedDownload[] = [];
+    // Download limits
+    private readonly MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB limit
+
+    // Storage quota management
+    private readonly STORAGE_QUOTA = 10 * 1024 * 1024 * 1024; // 10GB
+    private readonly CLEANUP_THRESHOLD = 0.9; // Start cleanup at 90% (9GB)
 
     // SSE progress emitter
     private progressSubjects = new Map<string, Subject<DownloadResult>>();
@@ -492,6 +504,37 @@ export class YouTubeService implements OnModuleInit {
         const id = this.generateId();
         const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
         const videoId = this.extractVideoId(request.url) || 'unknown';
+        const isClipMode = !!(request.startTime || request.endTime);
+
+        // Check for existing download (deduplication) - only for full video, not clips
+        if (!isClipMode) {
+            const existingDownload = await this.findExistingDownload(
+                videoId,
+                request.formatType,
+                request.quality,
+                request.outputFormat || (request.formatType === 'video' ? 'mp4' : 'mp3')
+            );
+            if (existingDownload) {
+                // Reset expiry to 1 hour from now and return existing download
+                const existingId = existingDownload.id as string;
+                await this.databaseService.sql`
+                    UPDATE youtube_downloads 
+                    SET expires_at = ${expiresAt}
+                    WHERE id = ${existingId}
+                `;
+                this.logger.log(`♻️ Reusing existing download: ${existingDownload.title} (reset expiry)`);
+                return {
+                    id: existingId,
+                    videoId: existingDownload.video_id as string,
+                    title: existingDownload.title as string,
+                    status: 'completed' as const,
+                    progress: 100,
+                    downloadUrl: `/youtube/${existingId}/file`,
+                    fileSize: existingDownload.file_size ? parseInt(existingDownload.file_size as string) : undefined,
+                    filename: existingDownload.filename as string | undefined,
+                };
+            }
+        }
 
         try {
             // Get video info first (includes actual filesizes from yt-dlp)
@@ -555,32 +598,7 @@ export class YouTubeService implements OnModuleInit {
                 }
             }
 
-            // Check if we need to queue or can start immediately
-            if (this.activeDownloads >= this.MAX_CONCURRENT_DOWNLOADS) {
-                // Queue the download
-                this.downloadQueue.push({ id, request, title });
-                const queuePosition = this.downloadQueue.length;
-
-                this.logger.log(`⏳ [${id}] Queued download (position ${queuePosition}): ${title}`);
-
-                // Create database record with 'queued' status
-                await this.databaseService.sql`
-                    INSERT INTO youtube_downloads (id, video_id, title, format_type, quality, status, expires_at)
-                    VALUES (${id}, ${videoId}, ${title}, ${request.formatType}, ${request.quality}, 'queued', ${expiresAt})
-                `;
-
-                return {
-                    id,
-                    videoId,
-                    title,
-                    status: 'queued',
-                    queuePosition,
-                };
-            }
-
-            // Start immediately
-            this.activeDownloads++;
-            this.logger.log(`📥 [${id}] Starting download (${this.activeDownloads}/${this.MAX_CONCURRENT_DOWNLOADS} active): ${title}`);
+            this.logger.log(`📥 [${id}] Starting download: ${title}`);
 
             // Create database record
             await this.databaseService.sql`
@@ -603,33 +621,7 @@ export class YouTubeService implements OnModuleInit {
         }
     }
 
-    /**
-     * Process next item in the download queue
-     */
-    private async processNextInQueue() {
-        if (this.downloadQueue.length === 0 || this.activeDownloads >= this.MAX_CONCURRENT_DOWNLOADS) {
-            return;
-        }
 
-        const next = this.downloadQueue.shift();
-        if (!next) return;
-
-        this.activeDownloads++;
-        this.logger.log(`📥 [${next.id}] Starting queued download (${this.activeDownloads}/${this.MAX_CONCURRENT_DOWNLOADS} active): ${next.title}`);
-
-        // Update status in database
-        await this.databaseService.sql`
-            UPDATE youtube_downloads SET status = 'processing' WHERE id = ${next.id}
-        `;
-
-        // Start the download
-        this.processDownloadWithYtDlp(next.id, next.request);
-
-        // Log remaining queue
-        if (this.downloadQueue.length > 0) {
-            this.logger.log(`📋 Queue: ${this.downloadQueue.length} remaining`);
-        }
-    }
 
     /**
      * Process download using yt-dlp
@@ -684,24 +676,28 @@ export class YouTubeService implements OnModuleInit {
             // Add format-specific options
             if (request.formatType === 'audio') {
                 args.push('-x');
-                args.push('--embed-thumbnail'); // Embed video thumbnail as album art
                 // Audio format options
                 switch (outputFormat) {
                     case 'm4a':
                         args.push('--audio-format', 'aac');
+                        args.push('--embed-thumbnail'); // m4a supports thumbnail
                         break;
                     case 'opus':
                         args.push('--audio-format', 'opus');
+                        args.push('--embed-thumbnail'); // opus supports thumbnail
                         break;
                     case 'flac':
                         args.push('--audio-format', 'flac');
+                        args.push('--embed-thumbnail'); // flac supports thumbnail
                         break;
                     case 'wav':
                         args.push('--audio-format', 'wav');
+                        // WAV doesn't support thumbnail embedding
                         break;
                     case 'mp3':
                     default:
                         args.push('--audio-format', 'mp3');
+                        args.push('--embed-thumbnail'); // mp3 supports thumbnail
                         break;
                 }
             } else {
@@ -982,6 +978,11 @@ export class YouTubeService implements OnModuleInit {
             };
             const contentType = contentTypeMap[ext] || (request.formatType === 'video' ? 'video/mp4' : 'audio/mpeg');
 
+            // Check storage quota and cleanup if needed before upload
+            const tempFileStats = fs.statSync(downloadedFile);
+            const tempFileSize = tempFileStats.size;
+            await this.cleanupStorageIfNeeded(tempFileSize);
+
             this.logger.log(`☁️ [${id}] Uploading to R2 (streaming)...`);
             // Set progress > 100 to indicate uploading phase (101-200 = uploading 0-99%)
             this.progressMap.set(id, 101);
@@ -1036,11 +1037,6 @@ export class YouTubeService implements OnModuleInit {
             this.emitProgress(id);
             // Cleanup progress map
             this.progressMap.delete(id);
-        } finally {
-            // Always decrement active downloads and process next in queue
-            this.activeDownloads--;
-            this.logger.log(`📊 Active downloads: ${this.activeDownloads}/${this.MAX_CONCURRENT_DOWNLOADS}`);
-            this.processNextInQueue();
         }
     }
 
@@ -1094,13 +1090,6 @@ export class YouTubeService implements OnModuleInit {
         // Get live progress from memory map if processing
         const liveProgress = this.progressMap.get(id);
 
-        // Calculate queue position for queued downloads
-        let queuePosition: number | undefined;
-        if (record.status === 'queued') {
-            const queueIndex = this.downloadQueue.findIndex(q => q.id === id);
-            queuePosition = queueIndex >= 0 ? queueIndex + 1 : undefined;
-        }
-
         return {
             id: record.id,
             videoId: record.video_id,
@@ -1114,8 +1103,38 @@ export class YouTubeService implements OnModuleInit {
             filename: record.filename || undefined,
             downloadUrl: record.status === 'completed' ? `/youtube/${id}/file` : undefined,
             error: record.error || undefined,
-            queuePosition,
         };
+    }
+
+    /**
+     * Find existing completed download for deduplication
+     * @param videoId - YouTube video ID
+     * @param formatType - 'video' or 'audio'
+     * @param quality - Quality string (e.g. '1080p', '720p')
+     * @param outputFormat - Output format (e.g. 'mp4', 'mp3')
+     * @returns Existing download record if found and not expired
+     */
+    private async findExistingDownload(
+        videoId: string,
+        formatType: string,
+        quality: string,
+        outputFormat: string
+    ): Promise<Record<string, unknown> | null> {
+        // Find completed downloads with same video_id, format_type, quality
+        // and filename ending with the expected extension
+        const records = await this.databaseService.sql`
+            SELECT * FROM youtube_downloads 
+            WHERE video_id = ${videoId}
+              AND format_type = ${formatType}
+              AND quality = ${quality}
+              AND status = 'completed'
+              AND object_key IS NOT NULL
+              AND expires_at > NOW()
+              AND filename LIKE ${'%.' + outputFormat}
+            ORDER BY created_at DESC
+            LIMIT 1
+        `;
+        return records.length > 0 ? records[0] : null;
     }
 
     /**
@@ -1188,6 +1207,87 @@ export class YouTubeService implements OnModuleInit {
     }
 
     /**
+     * Get total storage used by YouTube downloads (in bytes)
+     */
+    async getTotalStorageUsed(): Promise<number> {
+        const result = await this.databaseService.sql`
+            SELECT COALESCE(SUM(file_size), 0) as total_size 
+            FROM youtube_downloads 
+            WHERE status = 'completed' AND object_key IS NOT NULL
+        `;
+        return parseInt(result[0]?.total_size || '0');
+    }
+
+    /**
+     * Cleanup old downloads to make space before upload
+     * Strategy: Delete expired first, then oldest completed (FIFO)
+     * @param requiredSpace - Minimum bytes needed for new upload
+     */
+    async cleanupStorageIfNeeded(requiredSpace: number): Promise<void> {
+        const currentStorage = await this.getTotalStorageUsed();
+        const projectedStorage = currentStorage + requiredSpace;
+        const threshold = this.STORAGE_QUOTA * this.CLEANUP_THRESHOLD;
+
+        if (projectedStorage <= threshold) {
+            this.logger.debug(`📊 Storage OK: ${(currentStorage / 1024 / 1024 / 1024).toFixed(2)}GB / ${(this.STORAGE_QUOTA / 1024 / 1024 / 1024).toFixed(0)}GB`);
+            return;
+        }
+
+        this.logger.log(`⚠️ Storage near limit: ${(currentStorage / 1024 / 1024 / 1024).toFixed(2)}GB. Cleaning up...`);
+
+        // Calculate how much space we need to free
+        const spaceToFree = projectedStorage - threshold + requiredSpace;
+        let freedSpace = 0;
+        let deletedCount = 0;
+
+        // Step 1: Delete expired downloads first
+        const expiredDownloads = await this.databaseService.sql`
+            SELECT id, object_key, file_size 
+            FROM youtube_downloads 
+            WHERE expires_at < NOW() AND object_key IS NOT NULL
+            ORDER BY expires_at ASC
+        `;
+
+        for (const download of expiredDownloads) {
+            if (freedSpace >= spaceToFree) break;
+            try {
+                await this.deleteDownload(download.id, download.object_key);
+                freedSpace += parseInt(download.file_size || '0');
+                deletedCount++;
+            } catch (error) {
+                this.logger.warn(`Failed to delete expired download ${download.id}: ${error}`);
+            }
+        }
+
+        // Step 2: If still need space, delete oldest completed downloads (FIFO)
+        if (freedSpace < spaceToFree) {
+            const oldestDownloads = await this.databaseService.sql`
+                SELECT id, object_key, file_size, title
+                FROM youtube_downloads 
+                WHERE status = 'completed' AND object_key IS NOT NULL
+                ORDER BY created_at ASC
+                LIMIT 20
+            `;
+
+            for (const download of oldestDownloads) {
+                if (freedSpace >= spaceToFree) break;
+                try {
+                    await this.deleteDownload(download.id, download.object_key);
+                    freedSpace += parseInt(download.file_size || '0');
+                    deletedCount++;
+                    this.logger.log(`🗑️ Deleted old download: ${download.title?.substring(0, 30)}...`);
+                } catch (error) {
+                    this.logger.warn(`Failed to delete download ${download.id}: ${error}`);
+                }
+            }
+        }
+
+        if (deletedCount > 0) {
+            this.logger.log(`✅ Storage cleanup: deleted ${deletedCount} downloads, freed ${(freedSpace / 1024 / 1024).toFixed(1)}MB`);
+        }
+    }
+
+    /**
      * Cleanup progress subject
      */
     cleanupProgressSubject(id: string) {
@@ -1195,6 +1295,153 @@ export class YouTubeService implements OnModuleInit {
         if (subject) {
             subject.complete();
             this.progressSubjects.delete(id);
+        }
+    }
+
+    /**
+     * Try to get direct link info for a format, returns null if unavailable
+     * Used internally by getVideoInfo to enrich format options
+     */
+    private async tryGetDirectLinkInfo(
+        url: string,
+        formatType: 'video' | 'audio',
+        quality: string
+    ): Promise<DirectLinkInfo | null> {
+        try {
+            const result = await this.getDirectLink(url, formatType, quality);
+            return {
+                url: result.directUrl,
+                filename: result.filename,
+                expiresIn: result.expiresIn,
+            };
+        } catch {
+            // Silent fail - direct link not available for this format
+            return null;
+        }
+    }
+
+    /**
+     * Get direct download link from YouTube for low-quality formats
+     * - Video: 720p and below (combined video+audio streams)
+     * - Audio: any quality (YouTube provides standalone audio streams)
+     * The URL expires after ~6 hours
+     */
+    async getDirectLink(
+        url: string,
+        formatType: 'video' | 'audio',
+        quality: string
+    ): Promise<DirectLinkResult> {
+        const videoId = this.extractVideoId(url);
+        if (!videoId) {
+            throw new BadRequestException('Invalid YouTube URL');
+        }
+
+        let formatArg: string;
+        let displayQuality: string;
+
+        if (formatType === 'audio') {
+            // Audio: use bestaudio or specific bitrate
+            if (quality === 'bestaudio' || quality === 'best') {
+                formatArg = 'bestaudio';
+                displayQuality = 'Best Audio';
+            } else {
+                // Try to get specific bitrate (e.g., 128kbps, 192kbps)
+                const bitrate = parseInt(quality.replace('kbps', '')) || 128;
+                // Prefer m4a (better compatibility) or webm/opus
+                formatArg = `bestaudio[abr<=${bitrate}]/bestaudio`;
+                displayQuality = `${bitrate}kbps`;
+            }
+        } else {
+            // Video: only allow 720p and below (combined streams)
+            const height = parseInt(quality.replace('p', '')) || 720;
+            if (height > 720) {
+                throw new BadRequestException(
+                    'Direct link only supports 720p and below for video. Higher qualities require video+audio merging. Use the standard download endpoint instead.'
+                );
+            }
+            formatArg = `best[height<=${height}]`;
+            displayQuality = `${height}p`;
+        }
+
+        try {
+            const args: string[] = [
+                '-f', formatArg,
+                '-g',  // Get URL only, don't download
+                '-j',  // Also output JSON for metadata
+                '--no-warnings',
+                '--no-check-certificates',
+            ];
+
+            if (this.cookiesPath) {
+                args.push('--cookies', this.cookiesPath);
+            }
+
+            // Anti-bot measures
+            args.push(
+                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            );
+
+            args.push(url);
+
+            const command = `${this.ytdlpPath} ${args.map(a => /[\s\[\]<>]/.test(a) ? `"${a}"` : a).join(' ')}`;
+            this.logger.log(`🔗 [${videoId}] Getting direct link for ${formatType} ${quality}...`);
+            this.logger.debug(`📋 Command: ${command}`);
+
+            const result = execSync(command, {
+                encoding: 'utf-8',
+                maxBuffer: 10 * 1024 * 1024,
+                timeout: 30000,
+            });
+
+            // Parse output: first line is URL, second line is JSON
+            const lines = result.trim().split('\n');
+            if (lines.length < 2) {
+                throw new Error('Failed to extract direct URL');
+            }
+
+            const directUrl = lines[0].trim();
+            const info = JSON.parse(lines[1]);
+
+            // Validate URL
+            if (!directUrl.startsWith('http')) {
+                throw new Error('Invalid direct URL returned');
+            }
+
+            // Build filename
+            const sanitize = (s: string) => s.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').trim();
+            const title = info.title || 'media';
+            const ext = info.ext || (formatType === 'audio' ? 'm4a' : 'mp4');
+            const filename = `${sanitize(title).substring(0, 150)}.${ext}`;
+
+            // Determine quality to display
+            let resultQuality = displayQuality;
+            if (formatType === 'audio' && info.abr) {
+                resultQuality = `${Math.round(info.abr)}kbps`;
+            } else if (formatType === 'video' && info.height) {
+                resultQuality = `${info.height}p`;
+            }
+
+            this.logger.log(`✅ [${videoId}] Direct link ready: ${formatType} ${resultQuality} (expires ~6h)`);
+
+            return {
+                videoId: info.id || videoId,
+                title: info.title || 'YouTube Video',
+                directUrl,
+                filename,
+                filesize: info.filesize || info.filesize_approx,
+                quality: resultQuality,
+                expiresIn: '6 hours',
+            };
+        } catch (error) {
+            this.logger.error(`❌ [${videoId}] Failed to get direct link:`, error);
+
+            if (error instanceof BadRequestException) {
+                throw error;
+            }
+
+            throw new BadRequestException(
+                'Failed to get direct link. The video may be restricted or unavailable. Try the standard download instead.'
+            );
         }
     }
 }
