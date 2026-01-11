@@ -112,6 +112,7 @@ export default function YouTubePage() {
     const [endTime, setEndTime] = useState<string>('');
     const [embedSubtitles, setEmbedSubtitles] = useState(false);
     const [subtitleLang, setSubtitleLang] = useState('en');
+    const [sponsorBlock, setSponsorBlock] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadResult, setDownloadResult] = useState<DownloadResult | null>(null);
     const [downloadHistory, setDownloadHistory] = useState<DownloadHistoryItem[]>([]);
@@ -281,8 +282,9 @@ export default function YouTubePage() {
         setActivePlaylistInfo(null);
 
         try {
-            // Detect if URL is a playlist
-            const isPlaylist = url.includes('list=') || url.includes('/playlist');
+            // Detect if URL is a playlist (exclude Radio/Mix, Liked, Watch Later)
+            const isSpecialList = /list=(RD|LL|WL)/.test(url);
+            const isPlaylist = !isSpecialList && (url.includes('list=') || url.includes('/playlist'));
 
             if (isPlaylist) {
                 // Fetch playlist info
@@ -338,6 +340,13 @@ export default function YouTubePage() {
                     // Subtitle embedding (video only)
                     embedSubtitles: formatType === 'video' && embedSubtitles ? true : undefined,
                     subtitleLang: formatType === 'video' && embedSubtitles ? subtitleLang : undefined,
+                    // SponsorBlock sponsor removal
+                    sponsorBlock: sponsorBlock ? true : undefined,
+                    // Send estimated filesize for auto aria2c (on large files)
+                    estimatedFilesize: (() => {
+                        const format = currentFormats?.find(f => f.quality === selectedQuality);
+                        return format?.filesize;
+                    })(),
                 }),
             });
 
@@ -349,25 +358,32 @@ export default function YouTubePage() {
             const data = await res.json();
             setDownloadResult(data);
 
-            // Poll for completion
-            pollDownloadStatus(data.id);
+            // Stream progress via SSE
+            streamDownloadProgress(data.id);
         } catch (error) {
             addToast(error instanceof Error ? error.message : 'Download failed', 'error');
             setIsDownloading(false);
         }
     };
 
-    const pollDownloadStatus = async (id: string) => {
-        const maxAttempts = 180; // 15 minutes (180 * 5s = 900s)
-        let attempts = 0;
+    const streamDownloadProgress = (id: string) => {
+        const eventSource = new EventSource(`${API_BASE}/youtube/${id}/progress`);
 
-        const poll = async () => {
+        eventSource.onmessage = (event) => {
             try {
-                const res = await fetch(`${API_BASE}/youtube/${id}`);
-                const data = await res.json();
+                const data = JSON.parse(event.data);
+
+                if (data.error) {
+                    eventSource.close();
+                    setIsDownloading(false);
+                    addToast(data.error, 'error');
+                    return;
+                }
+
                 setDownloadResult(data);
 
                 if (data.status === 'completed') {
+                    eventSource.close();
                     setIsDownloading(false);
                     addToast('Download ready!', 'success');
                     // Save to history
@@ -384,35 +400,40 @@ export default function YouTubePage() {
                             createdAt: now,
                             expiresAt: now + EXPIRATION_MS,
                         });
-                        // Note: completedVideos will be updated when user clicks Next button
                     }
                 } else if (data.status === 'failed') {
+                    eventSource.close();
                     setIsDownloading(false);
                     addToast(data.error || 'Download failed', 'error');
                     if (activePlaylistInfo && videoInfo) {
-                        // Trigger move to next video
                         setShouldMoveToNext(true);
                     }
-                } else if (data.status === 'queued' || data.status === 'processing' || data.status === 'uploading' || data.status === 'pending') {
-                    // Continue polling for queued, processing, or pending status
-                    if (attempts < maxAttempts) {
-                        attempts++;
-                        setTimeout(poll, 2000); // Poll every 2 seconds for queued items
-                    } else {
-                        setIsDownloading(false);
-                        addToast('Download timed out', 'error');
-                    }
-                } else {
-                    setIsDownloading(false);
-                    addToast('Download timed out', 'error');
                 }
             } catch {
-                setIsDownloading(false);
-                addToast('Failed to check download status', 'error');
+                // Ignore parse errors
             }
         };
 
-        setTimeout(poll, 3000);
+        eventSource.onerror = () => {
+            eventSource.close();
+            // Fallback: check status once via REST
+            fetch(`${API_BASE}/youtube/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    setDownloadResult(data);
+                    if (data.status === 'completed') {
+                        setIsDownloading(false);
+                        addToast('Download ready!', 'success');
+                    } else if (data.status === 'failed') {
+                        setIsDownloading(false);
+                        addToast(data.error || 'Download failed', 'error');
+                    }
+                })
+                .catch(() => {
+                    setIsDownloading(false);
+                    addToast('Connection lost', 'error');
+                });
+        };
     };
 
     // Function to download next video from queue
@@ -1063,6 +1084,19 @@ export default function YouTubePage() {
                                     )}
                                 </div>
                             )}
+
+                            {/* SponsorBlock Option */}
+                            <div className={styles.subtitleSelector}>
+                                <label className={styles.subtitleCheckbox}>
+                                    <input
+                                        type="checkbox"
+                                        checked={sponsorBlock}
+                                        onChange={(e) => setSponsorBlock(e.target.checked)}
+                                        disabled={isDownloading}
+                                    />
+                                    <span>Remove Sponsor Segments (SponsorBlock)</span>
+                                </label>
+                            </div>
 
                             {/* Quality Options */}
                             <div className={styles.qualityOptions}>

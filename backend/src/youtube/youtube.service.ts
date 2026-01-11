@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException, OnModuleInit, BadRequestException } from '@nestjs/common';
+import { Subject } from 'rxjs';
 import { DatabaseService } from '../database/database.service';
 import { R2Service } from '../storage/r2.service';
 import { execSync, spawn } from 'child_process';
@@ -61,6 +62,8 @@ export interface DownloadRequest {
     endTime?: string;   // Optional: clip end time (seconds or mm:ss)
     embedSubtitles?: boolean; // Optional: embed subtitles into video
     subtitleLang?: string;    // Optional: subtitle language code (en, vi, etc.)
+    sponsorBlock?: boolean;   // Optional: remove sponsor segments using SponsorBlock
+    estimatedFilesize?: number; // Optional: estimated file size for auto aria2c
 }
 
 export interface DownloadResult {
@@ -116,6 +119,9 @@ export class YouTubeService implements OnModuleInit {
     private readonly MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB limit
     private activeDownloads = 0;
     private downloadQueue: QueuedDownload[] = [];
+
+    // SSE progress emitter
+    private progressSubjects = new Map<string, Subject<DownloadResult>>();
 
     constructor(
         private readonly databaseService: DatabaseService,
@@ -409,9 +415,14 @@ export class YouTubeService implements OnModuleInit {
     }
 
     /**
-     * Check if URL is a playlist
+     * Check if URL is a playlist (exclude Radio/Mix, Liked, Watch Later)
      */
     isPlaylistUrl(url: string): boolean {
+        // Exclude special auto-generated lists:
+        // RD = Radio/Mix, LL = Liked videos, WL = Watch Later
+        if (/list=(RD|LL|WL)/.test(url)) {
+            return false;
+        }
         return url.includes('list=') || url.includes('/playlist');
     }
 
@@ -436,6 +447,7 @@ export class YouTubeService implements OnModuleInit {
             const result = execSync(`${this.ytdlpPath} ${args.map(a => `"${a}"`).join(' ')}`, {
                 encoding: 'utf-8',
                 timeout: 60000,
+                maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large playlists
             });
 
             const info = JSON.parse(result);
@@ -660,6 +672,7 @@ export class YouTubeService implements OnModuleInit {
                 '--js-runtimes', 'bun',
                 '--no-check-certificates',
                 '--retries', '3',
+                '--embed-metadata', // Embed video metadata (title, artist, description, etc.)
             ];
 
             // Add cookies if available
@@ -670,6 +683,7 @@ export class YouTubeService implements OnModuleInit {
             // Add format-specific options
             if (request.formatType === 'audio') {
                 args.push('-x');
+                args.push('--embed-thumbnail'); // Embed video thumbnail as album art
                 // Audio format options
                 switch (outputFormat) {
                     case 'm4a':
@@ -716,6 +730,26 @@ export class YouTubeService implements OnModuleInit {
                 this.logger.log(`📝 [${id}] Embedding subtitles: ${subLang}`);
             }
 
+            // Add SponsorBlock sponsor removal
+            if (request.sponsorBlock) {
+                args.push('--sponsorblock-remove', 'all');
+                this.logger.log(`🚫 [${id}] SponsorBlock: removing sponsor segments`);
+            }
+
+            // Auto-use aria2c for large files (>100MB) for faster downloads
+            const ARIA2C_THRESHOLD = 100 * 1024 * 1024; // 100MB
+            if (request.estimatedFilesize && request.estimatedFilesize > ARIA2C_THRESHOLD) {
+                args.push(
+                    '--downloader', 'aria2c',
+                    // -x 16: 16 connections per server
+                    // -s 16: 16 connections total
+                    // -k 1M: min split size
+                    // --summary-interval=1: output progress every 1 second
+                    '--downloader-args', 'aria2c:-x 16 -s 16 -k 1M --summary-interval=1'
+                );
+                this.logger.log(`⚡ [${id}] Auto-enabling aria2c for large file (~${Math.round(request.estimatedFilesize / 1024 / 1024)}MB)`)
+            }
+
             args.push(request.url);
 
             // Log the full command for debugging
@@ -741,11 +775,35 @@ export class YouTubeService implements OnModuleInit {
                         this.logger.debug(`📥 [${id}] ${text.trim()}`);
                     }
 
-                    // Parse progress from yt-dlp output
-                    const progressMatch = text.match(/(\d+\.?\d*)%/);
-                    if (progressMatch) {
-                        const progress = Math.min(Math.floor(parseFloat(progressMatch[1])), 100);
-                        this.progressMap.set(id, progress);
+                    // Parse progress - handle both yt-dlp and aria2c formats
+                    // aria2c format: [#hash 12MiB/132MiB(9%) CN:16 DL:5.2MiB]
+                    // yt-dlp format: [download] 45.2% of 100MiB
+                    let progress = 0;
+
+                    // Try aria2c format - get ALL matches and take highest (multi-line chunks)
+                    const aria2cMatches = text.matchAll(/\((\d+)%\)/g);
+                    for (const match of aria2cMatches) {
+                        const p = parseInt(match[1]);
+                        if (p > progress) progress = p;
+                    }
+
+                    // Fallback to yt-dlp format if no aria2c matches
+                    if (progress === 0) {
+                        const progressMatch = text.match(/(\d+\.?\d*)%/);
+                        if (progressMatch) {
+                            progress = Math.floor(parseFloat(progressMatch[1]));
+                        }
+                    }
+
+                    if (progress > 0) {
+                        progress = Math.min(progress, 100);
+                        const currentProgress = this.progressMap.get(id) || 0;
+                        // Only update if higher (avoid going backwards between video/audio)
+                        if (progress > currentProgress || progress === 100) {
+                            this.progressMap.set(id, progress);
+                            // Emit SSE event
+                            this.emitProgress(id);
+                        }
 
                         // Log every 25% progress
                         if (progress >= lastLoggedProgress + 25) {
@@ -756,13 +814,39 @@ export class YouTubeService implements OnModuleInit {
                 });
 
                 proc.stdout.on('data', (data) => {
-                    const text = data.toString().trim();
-                    this.logger.debug(`yt-dlp: ${text}`);
-                    // Also check stdout for progress
-                    const progressMatch = text.match(/(\d+\.?\d*)%/);
-                    if (progressMatch) {
-                        const progress = Math.min(Math.floor(parseFloat(progressMatch[1])), 100);
-                        this.progressMap.set(id, progress);
+                    const text = data.toString();
+                    this.logger.debug(`yt-dlp: ${text.trim()}`);
+
+                    // Parse progress from stdout (aria2c outputs here)
+                    // Get ALL matches and take highest for multi-line chunks
+                    let progress = 0;
+                    const aria2cMatches = text.matchAll(/\((\d+)%\)/g);
+                    for (const match of aria2cMatches) {
+                        const p = parseInt(match[1]);
+                        if (p > progress) progress = p;
+                    }
+
+                    // Fallback to yt-dlp format
+                    if (progress === 0) {
+                        const progressMatch = text.match(/(\d+\.?\d*)%/);
+                        if (progressMatch) {
+                            progress = Math.floor(parseFloat(progressMatch[1]));
+                        }
+                    }
+
+                    if (progress > 0) {
+                        progress = Math.min(progress, 100);
+                        const currentProgress = this.progressMap.get(id) || 0;
+                        if (progress > currentProgress || progress === 100) {
+                            this.progressMap.set(id, progress);
+                            // Emit SSE event
+                            this.emitProgress(id);
+                            // Log progress from stdout
+                            if (progress >= lastLoggedProgress + 25) {
+                                this.logger.log(`📊 [${id}] Progress: ${progress}%`);
+                                lastLoggedProgress = progress;
+                            }
+                        }
                     }
                 });
 
@@ -829,6 +913,8 @@ export class YouTubeService implements OnModuleInit {
             await this.databaseService.sql`
                 UPDATE youtube_downloads SET status = 'uploading' WHERE id = ${id}
             `;
+            // Emit SSE event for upload phase
+            this.emitProgress(id);
             const fileSize = await this.r2Service.uploadObjectFromFile(objectKey, downloadedFile, contentType);
             this.logger.log(`☁️ [${id}] Upload complete!`);
 
@@ -844,6 +930,8 @@ export class YouTubeService implements OnModuleInit {
             `;
 
             this.logger.log(`🎉 [${id}] Download complete: ${displayFilename} (${(fileSize / 1024 / 1024).toFixed(2)} MB)`);
+            // Emit SSE event for completed status
+            this.emitProgress(id);
             // Cleanup progress map
             this.progressMap.delete(id);
         } catch (error) {
@@ -852,6 +940,8 @@ export class YouTubeService implements OnModuleInit {
             await this.databaseService.sql`
                 UPDATE youtube_downloads SET status = 'failed', error = ${errorMessage} WHERE id = ${id}
             `;
+            // Emit SSE event for failed status
+            this.emitProgress(id);
             // Cleanup progress map
             this.progressMap.delete(id);
         } finally {
@@ -969,5 +1059,47 @@ export class YouTubeService implements OnModuleInit {
         await this.databaseService.sql`
             DELETE FROM youtube_downloads WHERE id = ${id}
         `;
+    }
+
+    /**
+     * Get progress stream for SSE (Server-Sent Events)
+     */
+    getProgressStream(id: string): Subject<DownloadResult> {
+        if (!this.progressSubjects.has(id)) {
+            this.progressSubjects.set(id, new Subject<DownloadResult>());
+        }
+        return this.progressSubjects.get(id)!;
+    }
+
+    /**
+     * Emit progress update to SSE subscribers
+     */
+    private async emitProgress(id: string) {
+        const subject = this.progressSubjects.get(id);
+        if (subject) {
+            try {
+                const status = await this.getDownloadStatus(id);
+                subject.next(status);
+
+                // Complete and cleanup on terminal states
+                if (status.status === 'completed' || status.status === 'failed') {
+                    subject.complete();
+                    this.progressSubjects.delete(id);
+                }
+            } catch (error) {
+                // Ignore errors during emit
+            }
+        }
+    }
+
+    /**
+     * Cleanup progress subject
+     */
+    cleanupProgressSubject(id: string) {
+        const subject = this.progressSubjects.get(id);
+        if (subject) {
+            subject.complete();
+            this.progressSubjects.delete(id);
+        }
     }
 }

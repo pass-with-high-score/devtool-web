@@ -75,4 +75,50 @@ export class YouTubeController {
         const downloadUrl = await this.youtubeService.getDownloadUrl(id);
         res.redirect(302, downloadUrl);
     }
+
+    /**
+     * SSE endpoint for real-time progress updates
+     */
+    @Get(':id/progress')
+    async streamProgress(
+        @Param('id') id: string,
+        @Res() res: Response,
+    ): Promise<void> {
+        // Set SSE headers
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+        res.flushHeaders();
+
+        // Send initial status
+        try {
+            const initialStatus = await this.youtubeService.getDownloadStatus(id);
+            res.write(`data: ${JSON.stringify(initialStatus)}\n\n`);
+        } catch {
+            res.write(`data: ${JSON.stringify({ error: 'Download not found' })}\n\n`);
+            res.end();
+            return;
+        }
+
+        // Subscribe to progress stream
+        const progressStream = this.youtubeService.getProgressStream(id);
+        const subscription = progressStream.subscribe({
+            next: (status) => {
+                res.write(`data: ${JSON.stringify(status)}\n\n`);
+            },
+            complete: () => {
+                res.end();
+            },
+            error: () => {
+                res.end();
+            },
+        });
+
+        // Cleanup on client disconnect
+        res.on('close', () => {
+            subscription.unsubscribe();
+            this.youtubeService.cleanupProgressSubject(id);
+        });
+    }
 }

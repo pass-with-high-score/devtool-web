@@ -24,6 +24,12 @@ if ! command -v yt-dlp &> /dev/null; then
     fi
 fi
 
+# Install aria2 if not available (required for YouTube Downloader)
+if ! command -v aria2c &> /dev/null; then
+    echo "Installing aria2..."
+    sudo apt install aria2
+fi
+
 # Build the application
 bun install
 bun run build
