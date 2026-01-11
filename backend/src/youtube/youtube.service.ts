@@ -121,6 +121,10 @@ export class YouTubeService implements OnModuleInit {
     private activeDownloads = 0;
     private downloadQueue: QueuedDownload[] = [];
 
+    // Storage quota management
+    private readonly STORAGE_QUOTA = 10 * 1024 * 1024 * 1024; // 10GB
+    private readonly CLEANUP_THRESHOLD = 0.9; // Start cleanup at 90% (9GB)
+
     // SSE progress emitter
     private progressSubjects = new Map<string, Subject<DownloadResult>>();
 
@@ -492,6 +496,37 @@ export class YouTubeService implements OnModuleInit {
         const id = this.generateId();
         const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
         const videoId = this.extractVideoId(request.url) || 'unknown';
+        const isClipMode = !!(request.startTime || request.endTime);
+
+        // Check for existing download (deduplication) - only for full video, not clips
+        if (!isClipMode) {
+            const existingDownload = await this.findExistingDownload(
+                videoId,
+                request.formatType,
+                request.quality,
+                request.outputFormat || (request.formatType === 'video' ? 'mp4' : 'mp3')
+            );
+            if (existingDownload) {
+                // Reset expiry to 1 hour from now and return existing download
+                const existingId = existingDownload.id as string;
+                await this.databaseService.sql`
+                    UPDATE youtube_downloads 
+                    SET expires_at = ${expiresAt}
+                    WHERE id = ${existingId}
+                `;
+                this.logger.log(`♻️ Reusing existing download: ${existingDownload.title} (reset expiry)`);
+                return {
+                    id: existingId,
+                    videoId: existingDownload.video_id as string,
+                    title: existingDownload.title as string,
+                    status: 'completed' as const,
+                    progress: 100,
+                    downloadUrl: `/youtube/${existingId}/file`,
+                    fileSize: existingDownload.file_size ? parseInt(existingDownload.file_size as string) : undefined,
+                    filename: existingDownload.filename as string | undefined,
+                };
+            }
+        }
 
         try {
             // Get video info first (includes actual filesizes from yt-dlp)
@@ -982,6 +1017,11 @@ export class YouTubeService implements OnModuleInit {
             };
             const contentType = contentTypeMap[ext] || (request.formatType === 'video' ? 'video/mp4' : 'audio/mpeg');
 
+            // Check storage quota and cleanup if needed before upload
+            const tempFileStats = fs.statSync(downloadedFile);
+            const tempFileSize = tempFileStats.size;
+            await this.cleanupStorageIfNeeded(tempFileSize);
+
             this.logger.log(`☁️ [${id}] Uploading to R2 (streaming)...`);
             // Set progress > 100 to indicate uploading phase (101-200 = uploading 0-99%)
             this.progressMap.set(id, 101);
@@ -1119,6 +1159,37 @@ export class YouTubeService implements OnModuleInit {
     }
 
     /**
+     * Find existing completed download for deduplication
+     * @param videoId - YouTube video ID
+     * @param formatType - 'video' or 'audio'
+     * @param quality - Quality string (e.g. '1080p', '720p')
+     * @param outputFormat - Output format (e.g. 'mp4', 'mp3')
+     * @returns Existing download record if found and not expired
+     */
+    private async findExistingDownload(
+        videoId: string,
+        formatType: string,
+        quality: string,
+        outputFormat: string
+    ): Promise<Record<string, unknown> | null> {
+        // Find completed downloads with same video_id, format_type, quality
+        // and filename ending with the expected extension
+        const records = await this.databaseService.sql`
+            SELECT * FROM youtube_downloads 
+            WHERE video_id = ${videoId}
+              AND format_type = ${formatType}
+              AND quality = ${quality}
+              AND status = 'completed'
+              AND object_key IS NOT NULL
+              AND expires_at > NOW()
+              AND filename LIKE ${'%.' + outputFormat}
+            ORDER BY created_at DESC
+            LIMIT 1
+        `;
+        return records.length > 0 ? records[0] : null;
+    }
+
+    /**
      * Get presigned download URL for direct R2 download
      */
     async getDownloadUrl(id: string): Promise<string> {
@@ -1184,6 +1255,87 @@ export class YouTubeService implements OnModuleInit {
             } catch (error) {
                 // Ignore errors during emit
             }
+        }
+    }
+
+    /**
+     * Get total storage used by YouTube downloads (in bytes)
+     */
+    async getTotalStorageUsed(): Promise<number> {
+        const result = await this.databaseService.sql`
+            SELECT COALESCE(SUM(file_size), 0) as total_size 
+            FROM youtube_downloads 
+            WHERE status = 'completed' AND object_key IS NOT NULL
+        `;
+        return parseInt(result[0]?.total_size || '0');
+    }
+
+    /**
+     * Cleanup old downloads to make space before upload
+     * Strategy: Delete expired first, then oldest completed (FIFO)
+     * @param requiredSpace - Minimum bytes needed for new upload
+     */
+    async cleanupStorageIfNeeded(requiredSpace: number): Promise<void> {
+        const currentStorage = await this.getTotalStorageUsed();
+        const projectedStorage = currentStorage + requiredSpace;
+        const threshold = this.STORAGE_QUOTA * this.CLEANUP_THRESHOLD;
+
+        if (projectedStorage <= threshold) {
+            this.logger.debug(`📊 Storage OK: ${(currentStorage / 1024 / 1024 / 1024).toFixed(2)}GB / ${(this.STORAGE_QUOTA / 1024 / 1024 / 1024).toFixed(0)}GB`);
+            return;
+        }
+
+        this.logger.log(`⚠️ Storage near limit: ${(currentStorage / 1024 / 1024 / 1024).toFixed(2)}GB. Cleaning up...`);
+
+        // Calculate how much space we need to free
+        const spaceToFree = projectedStorage - threshold + requiredSpace;
+        let freedSpace = 0;
+        let deletedCount = 0;
+
+        // Step 1: Delete expired downloads first
+        const expiredDownloads = await this.databaseService.sql`
+            SELECT id, object_key, file_size 
+            FROM youtube_downloads 
+            WHERE expires_at < NOW() AND object_key IS NOT NULL
+            ORDER BY expires_at ASC
+        `;
+
+        for (const download of expiredDownloads) {
+            if (freedSpace >= spaceToFree) break;
+            try {
+                await this.deleteDownload(download.id, download.object_key);
+                freedSpace += parseInt(download.file_size || '0');
+                deletedCount++;
+            } catch (error) {
+                this.logger.warn(`Failed to delete expired download ${download.id}: ${error}`);
+            }
+        }
+
+        // Step 2: If still need space, delete oldest completed downloads (FIFO)
+        if (freedSpace < spaceToFree) {
+            const oldestDownloads = await this.databaseService.sql`
+                SELECT id, object_key, file_size, title
+                FROM youtube_downloads 
+                WHERE status = 'completed' AND object_key IS NOT NULL
+                ORDER BY created_at ASC
+                LIMIT 20
+            `;
+
+            for (const download of oldestDownloads) {
+                if (freedSpace >= spaceToFree) break;
+                try {
+                    await this.deleteDownload(download.id, download.object_key);
+                    freedSpace += parseInt(download.file_size || '0');
+                    deletedCount++;
+                    this.logger.log(`🗑️ Deleted old download: ${download.title?.substring(0, 30)}...`);
+                } catch (error) {
+                    this.logger.warn(`Failed to delete download ${download.id}: ${error}`);
+                }
+            }
+        }
+
+        if (deletedCount > 0) {
+            this.logger.log(`✅ Storage cleanup: deleted ${deletedCount} downloads, freed ${(freedSpace / 1024 / 1024).toFixed(1)}MB`);
         }
     }
 
