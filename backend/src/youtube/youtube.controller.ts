@@ -10,7 +10,7 @@ import {
     BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { DownloadRequest, DownloadResult, VideoInfo, YouTubeService } from './youtube.service';
+import { DownloadRequest, DownloadResult, VideoInfo, PlaylistInfo, YouTubeService } from './youtube.service';
 
 
 @Controller('youtube')
@@ -26,6 +26,17 @@ export class YouTubeController {
             throw new BadRequestException('URL is required');
         }
         return this.youtubeService.getVideoInfo(url);
+    }
+
+    /**
+     * Get playlist information
+     */
+    @Get('playlist')
+    async getPlaylistInfo(@Query('url') url: string): Promise<PlaylistInfo> {
+        if (!url) {
+            throw new BadRequestException('URL is required');
+        }
+        return this.youtubeService.getPlaylistInfo(url);
     }
 
     /**

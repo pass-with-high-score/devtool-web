@@ -90,6 +90,335 @@
     cursor: not-allowed;
 }
 
+/* Queue Status Bar */
+.queuePlaylistRow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    border-bottom: none;
+}
+
+.queueStatusBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.queueProgress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.queueIcon {
+    font-size: 1.25rem;
+}
+
+.queueText {
+    font-weight: 700;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.queueInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.queuePlaylistInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.queuePlaylistTitle {
+    font-weight: 700;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.queuePlaylistMeta {
+    font-size: 0.75rem;
+    color: var(--neo-black);
+    opacity: 0.8;
+}
+
+.queuePlaylistLink {
+    color: inherit;
+    text-decoration: underline;
+    font-weight: 600;
+    margin-left: 0.25rem;
+}
+
+.queuePlaylistLink:hover {
+    color: var(--neo-red);
+}
+
+.queueProgressTrack {
+    flex: 1;
+    min-width: 100px;
+    max-width: 200px;
+    height: 8px;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+}
+
+.queueProgressFill {
+    height: 100%;
+    background: var(--neo-green);
+    transition: width 0.3s ease;
+}
+
+.queueActions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.queueNextBtn {
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-green);
+    border: 2px solid var(--neo-black);
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.queueNextBtn:hover {
+    background: #00cc88;
+}
+
+.queueCancelBtn {
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.queueCancelBtn:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+.queueContainer {
+    margin-bottom: 1rem;
+}
+
+.queueToggleBtn {
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-purple);
+    border: 2px solid var(--neo-black);
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    justify-content: center;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.queueToggleBtn:hover {
+    background: #cc88ff;
+}
+
+.queueList {
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    border-top: none;
+}
+
+.queueListItems {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.queueListItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.queueListItem:last-child {
+    border-bottom: none;
+}
+
+.queueListThumb {
+    width: 60px;
+    height: 34px;
+    object-fit: cover;
+    border: 1px solid var(--neo-black);
+}
+
+.queueListThumbPlaceholder {
+    width: 60px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--neo-black);
+}
+
+.queueListInfo {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.queueListIndex {
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.queueListTitle {
+    flex: 1;
+    font-size: 0.8rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.queueStatus {
+    font-size: 1rem;
+    min-width: 24px;
+    text-align: center;
+}
+
+.queueStatusBadge {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid var(--neo-black);
+}
+
+.queueStatusBadge[data-status="done"] {
+    background: var(--neo-green);
+}
+
+.queueStatusBadge[data-status="downloading"] {
+    background: var(--neo-yellow);
+    animation: pulse 1s infinite;
+}
+
+.queueStatusBadge[data-status="ready"] {
+    background: var(--neo-cyan);
+}
+
+.queueStatusBadge[data-status="pending"] {
+    background: #eee;
+    color: var(--text-muted);
+}
+
+.queueListItem.completed {
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.queueListItem.failed {
+    background: rgba(255, 0, 0, 0.1);
+}
+
+.queueListItem.current {
+    background: rgba(255, 230, 0, 0.2);
+}
+
+.queueListItem.pending {
+    opacity: 0.7;
+}
+
+.queueListFormat {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    background: var(--neo-cyan);
+    border: 1px solid var(--neo-black);
+    white-space: nowrap;
+}
+
+.queueItemActions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.queueMoveBtn {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: var(--neo-white);
+    border: 1px solid var(--neo-black);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.queueMoveBtn:hover {
+    background: var(--neo-yellow);
+}
+
+.queueSkipBtn {
+    width: 28px;
+    height: 24px;
+    padding: 0;
+    background: var(--neo-cyan);
+    border: 1px solid var(--neo-black);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.queueSkipBtn:hover:not(:disabled) {
+    background: var(--neo-green);
+    transform: translateY(-1px);
+}
+
+.queueSkipBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.queueStatusBadge[data-status="failed"],
+.queueStatusBadge[data-status="skipped"] {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
 /* Video Card */
 .videoCard {
     background: var(--neo-white);
@@ -97,6 +426,171 @@
     box-shadow: 8px 8px 0px var(--neo-black);
     overflow: hidden;
     margin-bottom: 1.5rem;
+}
+
+.videoCardLoading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    text-align: center;
+    gap: 1rem;
+}
+
+.videoCardLoading h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.videoCardLoading p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Playlist Card */
+.playlistCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    margin-bottom: 1.5rem;
+}
+
+.playlistHeader {
+    padding: 1rem 1.25rem;
+    background: var(--neo-purple);
+    border-bottom: 3px solid var(--neo-black);
+}
+
+.playlistHeader h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.playlistMeta {
+    font-size: 0.8rem;
+    color: var(--neo-black);
+    opacity: 0.8;
+}
+
+.playlistActions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--neo-black);
+}
+
+.selectAllBtn {
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.selectAllBtn:hover {
+    background: var(--neo-yellow);
+}
+
+.selectedCount {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.playlistVideos {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.playlistItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd;
+    transition: background 0.15s ease;
+}
+
+.playlistItem:hover {
+    background: var(--neo-yellow);
+}
+
+.playlistItem.selected {
+    background: rgba(0, 255, 136, 0.2);
+}
+
+.playlistItem input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--neo-black);
+    cursor: pointer;
+}
+
+.playlistThumb {
+    width: 80px;
+    height: 45px;
+    object-fit: cover;
+    border: 2px solid var(--neo-black);
+}
+
+.playlistItemInfo {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.playlistIndex {
+    font-family: monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    min-width: 25px;
+}
+
+.playlistTitle {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.playlistDuration {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.playlistDownload {
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+    border-top: 2px solid var(--neo-black);
+}
+
+.playlistNote {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0 0 0.75rem 0;
+}
+
+.playlistBtnRow {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .videoThumbnail {
@@ -429,6 +923,88 @@
     cursor: pointer;
 }
 
+/* Chapter List */
+.chapterList {
+    margin-bottom: 1rem;
+}
+
+.chapterList>label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.chapters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 3px solid var(--neo-black);
+    background: var(--neo-white);
+}
+
+.chapterItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-bottom: 1px solid var(--neo-black);
+}
+
+.chapterItem:last-child {
+    border-bottom: none;
+}
+
+.chapterItem:hover {
+    background: var(--neo-yellow);
+}
+
+.chapterItem.selected {
+    background: var(--neo-cyan);
+}
+
+.chapterItem input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--neo-black);
+    cursor: pointer;
+}
+
+.chapterTime {
+    font-family: monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    min-width: 50px;
+}
+
+.chapterTitle {
+    font-size: 0.85rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clearChapterBtn {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.clearChapterBtn:hover {
+    background: var(--neo-yellow);
+}
+
 .qualityBtn {
     display: flex;
     flex-direction: column;
@@ -548,6 +1124,38 @@
 .downloadError p {
     margin: 0;
     font-weight: 600;
+}
+
+/* Queue Next */
+.queueNext {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--neo-purple);
+    border: 2px solid var(--neo-black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.queueNext span {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.nextVideoBtn {
+    padding: 0.5rem 1rem;
+    background: var(--neo-yellow);
+    border: 2px solid var(--neo-black);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.nextVideoBtn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 3px 3px 0px var(--neo-black);
 }
 
 /* Progress Bar */
