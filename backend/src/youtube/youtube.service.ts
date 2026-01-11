@@ -1341,25 +1341,29 @@ export class YouTubeService implements OnModuleInit {
 
         if (formatType === 'audio') {
             // Audio: use bestaudio or specific bitrate
+            // Exclude HLS/DASH manifests with protocol filter
             if (quality === 'bestaudio' || quality === 'best') {
-                formatArg = 'bestaudio';
+                formatArg = 'bestaudio[protocol^=http]';
                 displayQuality = 'Best Audio';
             } else {
                 // Try to get specific bitrate (e.g., 128kbps, 192kbps)
                 const bitrate = parseInt(quality.replace('kbps', '')) || 128;
                 // Prefer m4a (better compatibility) or webm/opus
-                formatArg = `bestaudio[abr<=${bitrate}]/bestaudio`;
+                // Exclude HLS/DASH manifests
+                formatArg = `bestaudio[abr<=${bitrate}][protocol^=http]/bestaudio[protocol^=http]`;
                 displayQuality = `${bitrate}kbps`;
             }
         } else {
             // Video: only allow 720p and below (combined streams)
+            // Use protocol filter to exclude HLS/DASH (m3u8) manifests
             const height = parseInt(quality.replace('p', '')) || 720;
             if (height > 720) {
                 throw new BadRequestException(
                     'Direct link only supports 720p and below for video. Higher qualities require video+audio merging. Use the standard download endpoint instead.'
                 );
             }
-            formatArg = `best[height<=${height}]`;
+            // Protocol filter: http or https only (not m3u8_native, etc.)
+            formatArg = `best[height<=${height}][protocol^=http]`;
             displayQuality = `${height}p`;
         }
 
@@ -1405,6 +1409,11 @@ export class YouTubeService implements OnModuleInit {
             // Validate URL
             if (!directUrl.startsWith('http')) {
                 throw new Error('Invalid direct URL returned');
+            }
+
+            // Reject HLS/DASH manifest URLs - these are playlists, not direct streams
+            if (directUrl.includes('.m3u8') || directUrl.includes('manifest.googlevideo.com')) {
+                throw new Error('HLS/DASH manifest returned instead of progressive stream. Use standard download.');
             }
 
             // Build filename
