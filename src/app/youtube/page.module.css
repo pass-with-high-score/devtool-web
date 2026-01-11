@@ -924,21 +924,23 @@
 }
 
 /* Chapter List */
-.chapterList {
-    margin-bottom: 1rem;
+.chapterListHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    font-weight: 700;
+    font-size: 0.8rem;
+    background: var(--bg-secondary);
 }
 
-.chapterList>label {
-    display: block;
-    font-weight: 700;
-    font-size: 0.85rem;
-    margin-bottom: 0.5rem;
+.chapterList {
+    margin-bottom: 1rem;
 }
 
 .chapters {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
     max-height: 200px;
     overflow-y: auto;
     border: 3px solid var(--neo-black);

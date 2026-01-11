@@ -989,7 +989,7 @@ export default function YouTubePage() {
                             {/* Chapter List (if available) */}
                             {videoInfo.chapters.length > 0 && (
                                 <div className={styles.chapterList}>
-                                    <label><BookOpenIcon size={16} /> Chapters ({videoInfo.chapters.length}):</label>
+                                    <div className={styles.chapterListHeader}><BookOpenIcon size={16} /> Chapters ({videoInfo.chapters.length}):</div>
                                     <div className={styles.chapters}>
                                         {videoInfo.chapters.map((chapter, idx) => (
                                             <label
