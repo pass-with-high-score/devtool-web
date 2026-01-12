@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ProxyService } from './proxy.service';
 import { DatabaseModule } from '../database/database.module';
+import { ProxyService } from './proxy.service';
 
 @Module({
     imports: [DatabaseModule],

@@ -1,273 +1,320 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { execSync } from 'child_process';
 import { DatabaseService } from '../database/database.service';
+import axios from 'axios';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Proxifly = require('proxifly');
-
-interface ValidProxy {
-    ip_port: string;
-    country?: string;
-    last_checked: Date;
+interface ProxyInfo {
+    protocol: string;
+    host: string;
+    port: number;
 }
 
 @Injectable()
 export class ProxyService implements OnModuleInit {
     private readonly logger = new Logger(ProxyService.name);
+    private readonly PROXY_CDN_URL = 'https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks5/data.txt';
+    private readonly VALIDATION_TIMEOUT = 10000; // 10 seconds
+    private readonly MAX_CONCURRENT_VALIDATIONS = 20; // Limit concurrent connections
 
-    // In-memory cache of working proxies for fast access
-    private workingProxies: string[] = [];
-    private lastProxyIndex = 0;
-
-    constructor(
-        private readonly databaseService: DatabaseService,
-    ) { }
+    constructor(private readonly databaseService: DatabaseService) { }
 
     async onModuleInit() {
         await this.initTable();
-        // Load existing valid proxies on startup
-        await this.loadProxiesFromDb();
-        // Initial refresh if no proxies available
-        if (this.workingProxies.length === 0) {
-            this.logger.log('🔄 No cached proxies, running initial refresh...');
-            await this.refreshProxyPool();
-        }
+        // Run initial proxy fetch on startup
+        this.refreshProxies();
     }
 
+    /**
+     * Initialize proxies table
+     */
     private async initTable() {
         await this.databaseService.sql`
-            CREATE TABLE IF NOT EXISTS valid_proxies (
+            CREATE TABLE IF NOT EXISTS proxies (
                 id SERIAL PRIMARY KEY,
-                ip_port VARCHAR(50) UNIQUE NOT NULL,
-                country VARCHAR(10),
+                protocol VARCHAR(10) NOT NULL,
+                host VARCHAR(255) NOT NULL,
+                port INTEGER NOT NULL,
                 last_checked TIMESTAMP DEFAULT NOW(),
-                is_valid BOOLEAN DEFAULT true,
-                created_at TIMESTAMP DEFAULT NOW()
+                is_working BOOLEAN DEFAULT true,
+                fail_count INTEGER DEFAULT 0,
+                response_time INTEGER DEFAULT 0,
+                UNIQUE(host, port)
             )
         `;
-        this.logger.log('🌐 Valid proxies table initialized');
-    }
-
-    /**
-     * Load valid proxies from database into memory cache
-     */
-    private async loadProxiesFromDb() {
-        const proxies = await this.databaseService.sql`
-            SELECT ip_port FROM valid_proxies 
-            WHERE is_valid = true 
-            AND last_checked > NOW() - INTERVAL '1 hour'
-            ORDER BY last_checked DESC
+        // Add response_time column if not exists (for existing tables)
+        await this.databaseService.sql`
+            ALTER TABLE proxies ADD COLUMN IF NOT EXISTS response_time INTEGER DEFAULT 0
         `;
-        this.workingProxies = proxies.map((p: { ip_port: string }) => p.ip_port);
-        this.logger.log(`📦 Loaded ${this.workingProxies.length} valid proxies from database`);
+        this.logger.log('🌐 Proxies table initialized');
     }
 
     /**
-     * Get a working proxy from the pool (round-robin)
-     * Returns null if no working proxies available
+     * Cronjob: Refresh proxies every 5 minutes
      */
-    getWorkingProxy(): string | null {
-        if (this.workingProxies.length === 0) {
-            this.logger.warn('⚠️ No working proxies available');
-            return null;
-        }
-
-        // Round-robin selection for load distribution
-        this.lastProxyIndex = (this.lastProxyIndex + 1) % this.workingProxies.length;
-        const proxy = `socks5://${this.workingProxies[this.lastProxyIndex]}`;
-        this.logger.debug(`🌐 Using proxy: ${proxy}`);
-        return proxy;
-    }
-
-    /**
-     * Cron job to refresh proxy pool - runs every 5 minutes
-     */
-    @Cron(CronExpression.EVERY_5_MINUTES)
-    async refreshProxyPool() {
-        this.logger.log('🔄 Refreshing proxy pool...');
+    @Cron(CronExpression.EVERY_HOUR)
+    async refreshProxies() {
+        this.logger.log('🔄 Starting proxy refresh...');
 
         try {
-            // Fetch proxies from multiple sources
-            const candidates = await this.fetchProxyCandidates();
-            this.logger.log(`📥 Fetched ${candidates.length} proxy candidates`);
+            // Fetch proxy list from CDN
+            const proxies = await this.fetchProxiesFromCDN();
+            this.logger.log(`📥 Fetched ${proxies.length} proxies from CDN`);
 
-            if (candidates.length === 0) {
-                this.logger.warn('⚠️ No proxy candidates fetched');
+            if (proxies.length === 0) {
+                this.logger.warn('⚠️ No proxies found in CDN response');
                 return;
             }
 
-            // Validate proxies in parallel (max 10 concurrent)
-            const validProxies: ValidProxy[] = [];
-            const batchSize = 10;
+            // Shuffle proxies to get random sample each time
+            const shuffled = proxies.sort(() => Math.random() - 0.5);
 
-            for (let i = 0; i < candidates.length; i += batchSize) {
-                const batch = candidates.slice(i, i + batchSize);
-                const results = await Promise.all(
+            // Check only 10 proxies initially, continue only if not enough working
+            const INITIAL_CHECK = 10;
+            const MIN_WORKING_REQUIRED = 3;
+            let workingCount = 0;
+            let checkedCount = 0;
+
+            for (let i = 0; i < shuffled.length; i += this.MAX_CONCURRENT_VALIDATIONS) {
+                const batch = shuffled.slice(i, i + this.MAX_CONCURRENT_VALIDATIONS);
+                const results = await Promise.allSettled(
                     batch.map(async (proxy) => {
-                        const isValid = await this.validateProxy(proxy);
-                        return isValid ? proxy : null;
+                        const responseTime = await this.validateProxy(proxy);
+                        if (responseTime > 0) {
+                            // Save immediately when proxy is working (with response time)
+                            await this.saveProxy(proxy, responseTime);
+                            return true;
+                        } else {
+                            // Mark as failed immediately
+                            await this.markProxyAsFailed(proxy);
+                            return false;
+                        }
                     })
                 );
 
-                for (const proxy of results) {
-                    if (proxy) {
-                        validProxies.push({
-                            ip_port: proxy,
-                            last_checked: new Date(),
-                        });
+                for (const result of results) {
+                    checkedCount++;
+                    if (result.status === 'fulfilled' && result.value) {
+                        workingCount++;
                     }
                 }
 
-                // Stop if we have enough valid proxies
-                if (validProxies.length >= 20) break;
+                this.logger.debug(`✅ Checked ${checkedCount} proxies, found ${workingCount} working`);
+
+                // Stop early if we have enough working proxies after initial check
+                if (checkedCount >= INITIAL_CHECK && workingCount >= MIN_WORKING_REQUIRED) {
+                    this.logger.log(`✅ Found ${workingCount} working proxies (checked ${checkedCount}/${shuffled.length}), stopping early`);
+                    break;
+                }
             }
 
-            this.logger.log(`✅ Found ${validProxies.length} working proxies`);
-
-            // Update database
-            for (const proxy of validProxies) {
-                await this.databaseService.sql`
-                    INSERT INTO valid_proxies (ip_port, last_checked, is_valid)
-                    VALUES (${proxy.ip_port}, ${proxy.last_checked}, true)
-                    ON CONFLICT (ip_port) 
-                    DO UPDATE SET last_checked = ${proxy.last_checked}, is_valid = true
-                `;
+            if (workingCount < MIN_WORKING_REQUIRED) {
+                this.logger.warn(`⚠️ Only found ${workingCount} working proxies after checking ${checkedCount}`);
             }
 
-            // Mark old proxies as invalid
+            // Cleanup dead proxies (> 5 consecutive failures)
+            await this.cleanupDeadProxies();
+
+        } catch (error) {
+            this.logger.error('❌ Proxy refresh failed:', error);
+        }
+    }
+
+    /**
+     * Fetch proxy list from CDN
+     */
+    private async fetchProxiesFromCDN(): Promise<ProxyInfo[]> {
+        try {
+            const response = await fetch(this.PROXY_CDN_URL);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch: ${response.status}`);
+            }
+
+            const text = await response.text();
+            const lines = text.split('\n').filter(line => line.trim());
+
+            const proxies: ProxyInfo[] = [];
+            for (const line of lines) {
+                const parsed = this.parseProxyLine(line.trim());
+                if (parsed) {
+                    proxies.push(parsed);
+                }
+            }
+
+            return proxies;
+        } catch (error) {
+            this.logger.error('Failed to fetch proxies from CDN:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Parse proxy line: socks5://192.111.137.37:18762
+     */
+    private parseProxyLine(line: string): ProxyInfo | null {
+        const match = line.match(/^(socks[45]?|http[s]?):\/\/([^:]+):(\d+)$/);
+        if (!match) {
+            // Try without protocol (just host:port)
+            const simpleMatch = line.match(/^([^:]+):(\d+)$/);
+            if (simpleMatch) {
+                return {
+                    protocol: 'socks5',
+                    host: simpleMatch[1],
+                    port: parseInt(simpleMatch[2], 10),
+                };
+            }
+            return null;
+        }
+
+        return {
+            protocol: match[1],
+            host: match[2],
+            port: parseInt(match[3], 10),
+        };
+    }
+
+    /**
+     * Validate proxy by making actual HTTP request through it
+     * Returns response time in ms if working, 0 if failed
+     */
+    private async validateProxy(proxy: ProxyInfo): Promise<number> {
+        try {
+            const proxyUrl = `${proxy.protocol}://${proxy.host}:${proxy.port}`;
+            const agent = new SocksProxyAgent(proxyUrl);
+
+            const startTime = Date.now();
+            const response = await axios.get('https://api.ipify.org?format=json', {
+                httpAgent: agent,
+                httpsAgent: agent,
+                timeout: this.VALIDATION_TIMEOUT,
+            });
+            const responseTime = Date.now() - startTime;
+
+            // If we get a valid IP response, proxy is working
+            if (response.data?.ip) {
+                return responseTime;
+            }
+            return 0;
+        } catch {
+            return 0;
+        }
+    }
+
+    /**
+     * Save a single working proxy to database immediately
+     */
+    private async saveProxy(proxy: ProxyInfo, responseTime: number) {
+        try {
             await this.databaseService.sql`
-                UPDATE valid_proxies 
-                SET is_valid = false 
-                WHERE last_checked < NOW() - INTERVAL '30 minutes'
+                INSERT INTO proxies (protocol, host, port, last_checked, is_working, fail_count, response_time)
+                VALUES (${proxy.protocol}, ${proxy.host}, ${proxy.port}, NOW(), true, 0, ${responseTime})
+                ON CONFLICT (host, port) 
+                DO UPDATE SET 
+                    protocol = ${proxy.protocol},
+                    last_checked = NOW(),
+                    is_working = true,
+                    fail_count = 0,
+                    response_time = ${responseTime}
+            `;
+            this.logger.debug(`💾 Saved proxy ${proxy.host}:${proxy.port} (${responseTime}ms)`);
+        } catch (error) {
+            this.logger.error(`Failed to save proxy ${proxy.host}:${proxy.port}:`, error);
+        }
+    }
+
+    /**
+     * Mark a proxy as failed during validation
+     */
+    private async markProxyAsFailed(proxy: ProxyInfo) {
+        try {
+            await this.databaseService.sql`
+                UPDATE proxies 
+                SET is_working = false, 
+                    fail_count = fail_count + 1,
+                    last_checked = NOW()
+                WHERE host = ${proxy.host} AND port = ${proxy.port}
+            `;
+        } catch {
+            // Ignore - proxy might not exist in DB yet
+        }
+    }
+
+    /**
+     * Cleanup proxies that failed too many times
+     */
+    private async cleanupDeadProxies() {
+        try {
+            const deleted = await this.databaseService.sql`
+                DELETE FROM proxies WHERE fail_count > 5 RETURNING id
+            `;
+            if (deleted.length > 0) {
+                this.logger.log(`🗑️ Removed ${deleted.length} dead proxies from database`);
+            }
+        } catch (error) {
+            this.logger.error('Failed to cleanup dead proxies:', error);
+        }
+    }
+
+    /**
+     * Get the fastest working proxy for use
+     */
+    async getRandomProxy(): Promise<string | null> {
+        try {
+            // Select fastest working proxy (lowest response time)
+            const result = await this.databaseService.sql`
+                SELECT protocol, host, port, response_time 
+                FROM proxies 
+                WHERE is_working = true 
+                ORDER BY response_time ASC 
+                LIMIT 1
             `;
 
-            // Reload cache
-            await this.loadProxiesFromDb();
-
-        } catch (error) {
-            this.logger.error('❌ Failed to refresh proxy pool:', error);
-        }
-    }
-
-    /**
-     * Fetch proxy candidates from Proxifly CDN
-     */
-    private async fetchProxyCandidates(): Promise<string[]> {
-        const candidates: string[] = [];
-
-        // Try Proxifly NPM first
-        try {
-            const proxifly = new Proxifly({
-                apiKey: process.env.PROXIFLY_API_KEY || 'api_test_key'
-            });
-
-            const result = await proxifly.getProxy({
-                protocol: 'socks5',
-                anonymity: 'elite',
-                https: true,
-                speed: 10000,
-                format: 'json',
-                quantity: 20,
-            });
-
-            if (Array.isArray(result)) {
-                for (const p of result) {
-                    if (p?.ipPort) {
-                        const normalized = this.normalizeProxy(p.ipPort);
-                        if (normalized) candidates.push(normalized);
-                    }
-                }
-            } else if (result?.ipPort) {
-                const normalized = this.normalizeProxy(result.ipPort);
-                if (normalized) candidates.push(normalized);
-            }
-        } catch (error) {
-            this.logger.warn(`⚠️ Proxifly NPM failed: ${error instanceof Error ? error.message : 'Unknown'}`);
-        }
-
-        // Fallback: CDN
-        try {
-            const response = await fetch(
-                'https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks5/data.txt'
-            );
-            const text = await response.text();
-            const lines = text.trim().split('\n').filter(l => l.trim());
-
-            // Shuffle and take first 50
-            const shuffled = lines.sort(() => Math.random() - 0.5).slice(0, 50);
-            for (const line of shuffled) {
-                const normalized = this.normalizeProxy(line);
-                if (normalized && !candidates.includes(normalized)) {
-                    candidates.push(normalized);
-                }
-            }
-        } catch (error) {
-            this.logger.warn(`⚠️ CDN fetch failed: ${error instanceof Error ? error.message : 'Unknown'}`);
-        }
-
-        return candidates;
-    }
-
-    /**
-     * Normalize proxy string to IP:PORT format
-     */
-    private normalizeProxy(proxyStr: string): string | null {
-        if (!proxyStr) return null;
-
-        let cleaned = proxyStr.trim();
-        cleaned = cleaned.replace(/^(https?|socks[45]?):\/\//gi, '');
-
-        const ipPortRegex = /^(\d{1,3}\.){3}\d{1,3}:\d{1,5}$/;
-        if (!ipPortRegex.test(cleaned)) return null;
-
-        const [ip, portStr] = cleaned.split(':');
-        const octets = ip.split('.').map(Number);
-        const port = parseInt(portStr, 10);
-
-        for (const octet of octets) {
-            if (octet < 0 || octet > 255) return null;
-        }
-        if (port < 1 || port > 65535) return null;
-
-        return cleaned;
-    }
-
-    /**
-     * Validate proxy by testing yt-dlp connection to YouTube
-     * Uses yt-dlp --dump-json to check if proxy works for YouTube (no download)
-     */
-    private async validateProxy(ipPort: string): Promise<boolean> {
-        try {
-            // Use yt-dlp with --dump-json to test proxy (no download, just fetch metadata)
-            // Test with a short, always-available YouTube video
-            const testVideoUrl = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'; // First YouTube video ever
-            const result = execSync(
-                `yt-dlp --proxy socks5://${ipPort} --dump-json --no-download --no-warnings "${testVideoUrl}" 2>&1 | head -c 100`,
-                { encoding: 'utf-8', timeout: 15000 }
-            );
-
-            // If we got JSON output starting with {, proxy works
-            const isValid = result.trim().startsWith('{');
-
-            if (isValid) {
-                this.logger.debug(`✅ Proxy valid for yt-dlp: ${ipPort}`);
+            if (result.length === 0) {
+                this.logger.debug('No working proxies available');
+                return null;
             }
 
-            return isValid;
-        } catch {
-            // Timeout or connection error
-            return false;
+            const proxy = result[0];
+            const proxyUrl = `${proxy.protocol}://${proxy.host}:${proxy.port}`;
+            this.logger.debug(`🚀 Selected fastest proxy: ${proxyUrl} (${proxy.response_time}ms)`);
+            return proxyUrl;
+        } catch (error) {
+            this.logger.error('Failed to get proxy:', error);
+            return null;
         }
     }
 
     /**
-     * Get pool statistics
+     * Mark a proxy as failed (called when download fails with proxy)
      */
-    getPoolStats() {
-        return {
-            cached: this.workingProxies.length,
-            lastIndex: this.lastProxyIndex,
-        };
+    async markProxyFailed(proxyUrl: string) {
+        const parsed = this.parseProxyLine(proxyUrl);
+        if (!parsed) return;
+
+        try {
+            await this.databaseService.sql`
+                UPDATE proxies 
+                SET fail_count = fail_count + 1,
+                    is_working = CASE WHEN fail_count >= 2 THEN false ELSE is_working END
+                WHERE host = ${parsed.host} AND port = ${parsed.port}
+            `;
+            this.logger.debug(`⚠️ Marked proxy as failed: ${proxyUrl}`);
+        } catch (error) {
+            this.logger.error('Failed to mark proxy as failed:', error);
+        }
+    }
+
+    /**
+     * Get count of working proxies
+     */
+    async getWorkingProxyCount(): Promise<number> {
+        try {
+            const result = await this.databaseService.sql`
+                SELECT COUNT(*) as count FROM proxies WHERE is_working = true
+            `;
+            return parseInt(result[0]?.count || '0', 10);
+        } catch (error) {
+            return 0;
+        }
     }
 }
