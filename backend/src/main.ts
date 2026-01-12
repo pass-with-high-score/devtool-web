@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { LoggingInterceptor } from './common/logging.interceptor';
 
 async function bootstrap() {
     const logger = new Logger('Bootstrap');
@@ -13,10 +14,13 @@ async function bootstrap() {
         allowedHeaders: ['Content-Type', 'Authorization'],
     });
 
-    const port = process.env.PORT || 3001;
+    // Global logging interceptor
+    app.useGlobalInterceptors(new LoggingInterceptor());
+
+    const port = process.env.PORT || 3010;
+    console.log(`🚀 Cleanup backend is running on port ${port}`);
     await app.listen(port);
 
-    logger.log(`🚀 Cleanup backend is running on port ${port}`);
     logger.log(`📅 Scheduled cleanup task will run every hour`);
 }
 bootstrap();

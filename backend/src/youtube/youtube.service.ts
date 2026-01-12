@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException, OnModuleInit, BadRequestExceptio
 import { Subject } from 'rxjs';
 import { DatabaseService } from '../database/database.service';
 import { R2Service } from '../storage/r2.service';
+import { ProxyService } from '../proxy/proxy.service';
 import { execSync, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -139,6 +140,7 @@ export class YouTubeService implements OnModuleInit {
     constructor(
         private readonly databaseService: DatabaseService,
         private readonly r2Service: R2Service,
+        private readonly proxyService: ProxyService,
     ) { }
 
     async onModuleInit() {
@@ -239,6 +241,12 @@ export class YouTubeService implements OnModuleInit {
             // Add cookies if available
             if (this.cookiesPath) {
                 args.push('--cookies', this.cookiesPath);
+            }
+
+            // Add proxy if available
+            const proxy = this.proxyService.getWorkingProxy();
+            if (proxy) {
+                args.push('--proxy', proxy);
             }
 
             // Anti-bot measures with bun runtime
@@ -671,6 +679,12 @@ export class YouTubeService implements OnModuleInit {
             // Add cookies if available
             if (this.cookiesPath) {
                 args.push('--cookies', this.cookiesPath);
+            }
+
+            // Add proxy if available
+            const proxy = this.proxyService.getWorkingProxy();
+            if (proxy) {
+                args.push('--proxy', proxy);
             }
 
             // Add format-specific options
@@ -1378,6 +1392,12 @@ export class YouTubeService implements OnModuleInit {
 
             if (this.cookiesPath) {
                 args.push('--cookies', this.cookiesPath);
+            }
+
+            // Add proxy if available
+            const proxy = this.proxyService.getWorkingProxy();
+            if (proxy) {
+                args.push('--proxy', proxy);
             }
 
             // Anti-bot measures
