@@ -1,0 +1,430 @@
+/* Local Video Player Page Styles */
+
+.container {
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    position: relative;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #fdf4ff 0%, #f0f9ff 50%, #ecfdf5 100%);
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.logoIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-pink);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    color: var(--neo-black);
+}
+
+.logo h1 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--neo-black);
+    margin: 0;
+}
+
+.tagline {
+    font-size: 1rem;
+    color: #475569;
+    margin: 0;
+}
+
+/* Main */
+.main {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Upload Zone */
+.uploadZone {
+    padding: 3rem 2rem;
+    background: var(--neo-white);
+    border: 4px dashed var(--neo-black);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 2rem;
+}
+
+.uploadZone:hover {
+    background: var(--neo-yellow);
+    border-style: solid;
+    box-shadow: 6px 6px 0 var(--neo-black);
+}
+
+.uploadZone.dragOver {
+    background: var(--neo-green);
+    border-style: solid;
+    box-shadow: 6px 6px 0 var(--neo-black);
+    transform: scale(1.02);
+}
+
+.fileInput {
+    display: none;
+}
+
+.uploadPrompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uploadIconLarge {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-pink);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    margin-bottom: 0.5rem;
+}
+
+.uploadText {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.uploadHint {
+    font-size: 0.9rem;
+    color: #475569;
+    margin: 0;
+}
+
+.uploadLimit {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+    margin-top: 0.5rem;
+}
+
+/* Video Player Section */
+.playerSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.playerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.playerHeader h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.closeButton {
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    flex-shrink: 0;
+}
+
+.closeButton:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+/* Video Container */
+.videoContainer {
+    position: relative;
+    background: #000;
+    aspect-ratio: 16/9;
+    width: 100%;
+}
+
+.videoElement {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* Custom Controls */
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #1e293b;
+}
+
+/* Progress Bar */
+.progressContainer {
+    position: relative;
+    height: 8px;
+    background: #334155;
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+}
+
+.progressBar {
+    height: 100%;
+    background: var(--neo-pink);
+    transition: width 0.1s ease;
+}
+
+.progressContainer:hover .progressBar {
+    background: var(--neo-yellow);
+}
+
+/* Controls Row */
+.controlsRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.leftControls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rightControls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.controlButton {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    color: var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.controlButton:hover {
+    background: var(--neo-yellow);
+    box-shadow: 2px 2px 0 var(--neo-black);
+}
+
+.controlButton:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+/* Time Display */
+.timeDisplay {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--neo-white);
+    padding: 0 0.5rem;
+    white-space: nowrap;
+}
+
+/* Volume Control */
+.volumeContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.volumeSlider {
+    width: 80px;
+    height: 6px;
+    appearance: none;
+    background: #334155;
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+}
+
+.volumeSlider::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+}
+
+.volumeSlider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+}
+
+/* Video Info */
+.videoInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    background: #f8fafc;
+    border-top: 3px solid var(--neo-black);
+    flex-wrap: wrap;
+}
+
+.videoInfoItem {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.videoInfoItem strong {
+    color: var(--neo-black);
+    font-weight: 700;
+}
+
+/* Features */
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .volumeSlider {
+        width: 60px;
+    }
+
+    .controlsRow {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .leftControls,
+    .rightControls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+.feature {
+    padding: 1.5rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    text-align: center;
+}
+
+.featureIcon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-pink);
+    border: 3px solid var(--neo-black);
+}
+
+.feature h4 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+}
+
+.feature p {
+    font-size: 0.8rem;
+    color: #475569;
+    margin: 0;
+}
+
+/* Playback Speed */
+.speedButton {
+    min-width: 50px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.speedButton:hover {
+    background: var(--neo-cyan);
+    box-shadow: 2px 2px 0 var(--neo-black);
+}
+
+/* Active button state (for subtitle) */
+.activeButton {
+    background: var(--neo-green) !important;
+}
+
+.activeButton:hover {
+    background: var(--neo-yellow) !important;
+}
+
+/* Video subtitle styling */
+.videoElement::cue {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    padding: 0.25rem 0.5rem;
+}
