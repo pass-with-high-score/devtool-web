@@ -101,5 +101,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'monthly',
             priority: 0.8,
         },
+        {
+            url: `${baseUrl}/audio`,
+            lastModified,
+            changeFrequency: 'monthly',
+            priority: 0.8,
+        },
     ];
 }
