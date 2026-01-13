@@ -122,6 +122,13 @@ const tools: Tool[] = [
         icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>,
         color: 'green',
     },
+    {
+        href: '/stream',
+        title: 'Stream Player',
+        description: 'Play HLS and DASH streams. Adaptive bitrate, quality selector.',
+        icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" /><circle cx="2" cy="20" r="1" fill="currentColor" /></svg>,
+        color: 'cyan',
+    },
 ];
 
 export default function HomePage() {

@@ -1,0 +1,547 @@
+/* HLS Stream Player Page Styles */
+
+.container {
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    position: relative;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #1e293b 100%);
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    max-width: 1000px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.logoIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-cyan);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    color: var(--neo-black);
+}
+
+.logo h1 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--neo-white);
+    margin: 0;
+}
+
+.tagline {
+    font-size: 1rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* Main */
+.main {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* URL Input Section */
+.urlSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    margin-bottom: 2rem;
+    padding: 1.25rem;
+}
+
+.urlForm {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.urlInputWrapper {
+    flex: 1;
+    position: relative;
+}
+
+.urlInput {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+    border: 3px solid var(--neo-black);
+    background: var(--neo-white);
+    font-family: 'Roboto Mono', monospace;
+    outline: none;
+    transition: all 0.1s ease;
+}
+
+.urlInput:focus {
+    background: #fef3c7;
+    box-shadow: 3px 3px 0 var(--neo-black);
+}
+
+.urlInput::placeholder {
+    color: #94a3b8;
+}
+
+.playButton {
+    padding: 0.875rem 1.5rem;
+    background: var(--neo-cyan);
+    color: var(--neo-black);
+    border: 3px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.playButton:hover {
+    background: var(--neo-yellow);
+    box-shadow: 3px 3px 0 var(--neo-black);
+}
+
+.playButton:active {
+    transform: translate(3px, 3px);
+    box-shadow: none;
+}
+
+.playButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Sample URLs */
+.sampleUrls {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px dashed #e2e8f0;
+}
+
+.sampleLabel {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.sampleButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.sampleButton {
+    padding: 0.4rem 0.75rem;
+    background: #f1f5f9;
+    color: var(--neo-black);
+    border: 2px solid var(--neo-black);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.sampleButton:hover {
+    background: var(--neo-yellow);
+    box-shadow: 2px 2px 0 var(--neo-black);
+}
+
+/* Player Section */
+.playerSection {
+    background: #000;
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.playerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #1e293b;
+    color: var(--neo-white);
+    gap: 1rem;
+}
+
+.playerHeader h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+}
+
+.liveIndicator {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--neo-red);
+    border: 2px solid var(--neo-black);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.liveDot {
+    width: 8px;
+    height: 8px;
+    background: var(--neo-white);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
+.closeButton {
+    padding: 0.35rem 0.6rem;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.closeButton:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+/* Video Container */
+.videoContainer {
+    position: relative;
+    aspect-ratio: 16/9;
+    width: 100%;
+    background: #000;
+}
+
+.videoElement {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Loading State */
+.loadingOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--neo-white);
+    gap: 1rem;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #334155;
+    border-top-color: var(--neo-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingText {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+/* Error State */
+.errorOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.9);
+    color: var(--neo-white);
+    gap: 1rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+.errorIcon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-red);
+    border: 3px solid var(--neo-black);
+    color: var(--neo-white);
+}
+
+.errorText {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--neo-red);
+}
+
+.errorDetails {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    max-width: 400px;
+}
+
+/* Stream Info */
+.streamInfo {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: #1e293b;
+    border-top: 2px solid #334155;
+    flex-wrap: wrap;
+}
+
+.streamInfoItem {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.streamInfoItem strong {
+    color: var(--neo-white);
+    font-weight: 700;
+}
+
+/* Quality Selector */
+.qualitySelector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qualityLabel {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.qualitySelect {
+    padding: 0.35rem 0.5rem;
+    background: #334155;
+    color: var(--neo-white);
+    border: 2px solid var(--neo-black);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Features */
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .urlForm {
+        flex-direction: column;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .streamInfo {
+        gap: 0.75rem;
+    }
+}
+
+.feature {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.featureIcon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    color: var(--neo-black);
+}
+
+.feature h4 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: var(--neo-white);
+}
+
+.feature p {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* History Section */
+.historySection {
+    margin-top: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 4px solid rgba(255, 255, 255, 0.1);
+}
+
+.historyHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.historyHeader h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--neo-white);
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.clearHistoryButton {
+    padding: 0.3rem 0.6rem;
+    background: transparent;
+    color: #94a3b8;
+    border: 2px solid #475569;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.clearHistoryButton:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+    border-color: var(--neo-red);
+}
+
+.historyList {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.historyItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.historyItem:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.historyItem:last-child {
+    border-bottom: none;
+}
+
+.historyUrl {
+    flex: 1;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.historyType {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid;
+}
+
+.historyType.hls {
+    color: var(--neo-cyan);
+    border-color: var(--neo-cyan);
+}
+
+.historyType.dash {
+    color: var(--neo-pink);
+    border-color: var(--neo-pink);
+}
+
+.historyRemove {
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.1s ease;
+}
+
+.historyItem:hover .historyRemove {
+    opacity: 1;
+}
+
+.historyRemove:hover {
+    color: var(--neo-red);
+}
