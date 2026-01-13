@@ -25,12 +25,14 @@ function generateSkinXml(skinData: SkinData): string {
 
     // Build motion elements
     const motions = states.map(state => {
-        const motionAttrs: Record<string, unknown> = {
+        const motionAttrs: Record<string, string> = {
             '@_state': state.state,
         };
 
-        if (state.checkMove) motionAttrs['@_checkMove'] = 'true';
-        if (state.checkWall) motionAttrs['@_checkWall'] = 'true';
+        // Only add boolean attributes if they are truthy
+        // Use Boolean() to handle any edge cases from various data sources
+        if (Boolean(state.checkMove)) motionAttrs['@_checkMove'] = 'true';
+        if (Boolean(state.checkWall)) motionAttrs['@_checkWall'] = 'true';
         if (state.nextState) motionAttrs['@_nextState'] = state.nextState;
 
         const children = buildAnimationItems(state.items);
@@ -66,6 +68,7 @@ function generateSkinXml(skinData: SkinData): string {
         format: true,
         indentBy: '    ',
         suppressEmptyNode: true,
+        suppressBooleanAttributes: false,
     });
 
     return builder.build(xmlObj);
