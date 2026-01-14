@@ -25,12 +25,14 @@ function generateSkinXml(skinData: SkinData): string {
 
     // Build motion elements
     const motions = states.map(state => {
-        const motionAttrs: Record<string, unknown> = {
+        const motionAttrs: Record<string, string> = {
             '@_state': state.state,
         };
 
-        if (state.checkMove) motionAttrs['@_checkMove'] = 'true';
-        if (state.checkWall) motionAttrs['@_checkWall'] = 'true';
+        // Only add boolean attributes if they are truthy
+        // Use Boolean() to handle any edge cases from various data sources
+        if (Boolean(state.checkMove)) motionAttrs['@_checkMove'] = 'true';
+        if (Boolean(state.checkWall)) motionAttrs['@_checkWall'] = 'true';
         if (state.nextState) motionAttrs['@_nextState'] = state.nextState;
 
         const children = buildAnimationItems(state.items);
@@ -40,6 +42,17 @@ function generateSkinXml(skinData: SkinData): string {
             ...children,
         };
     });
+    // Ensure preview has proper extension by finding matching asset
+    let previewValue = metadata.preview;
+    if (previewValue && !previewValue.match(/\.(png|jpg|jpeg|gif)$/i)) {
+        // Try to find matching asset with extension
+        const matchingAsset = skinData.assets.find(asset =>
+            asset.filename.replace(/\.(png|jpg|jpeg|gif)$/i, '') === previewValue
+        );
+        if (matchingAsset) {
+            previewValue = matchingAsset.filename;
+        }
+    }
 
     const xmlObj = {
         '?xml': { '@_version': '1.0', '@_encoding': 'utf-8' },
@@ -47,7 +60,7 @@ function generateSkinXml(skinData: SkinData): string {
             '@_package': metadata.package,
             '@_name': metadata.name,
             '@_author': metadata.author,
-            '@_preview': metadata.preview,
+            '@_preview': previewValue,
             '@_acceleration': params.acceleration,
             '@_maxVelocity': params.maxVelocity,
             '@_deaccelerationDistance': params.deaccelerationDistance,
@@ -66,6 +79,7 @@ function generateSkinXml(skinData: SkinData): string {
         format: true,
         indentBy: '    ',
         suppressEmptyNode: true,
+        suppressBooleanAttributes: false,
     });
 
     return builder.build(xmlObj);

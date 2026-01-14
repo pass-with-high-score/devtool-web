@@ -62,5 +62,5 @@ export const DEFAULT_METADATA: SkinMetadata = {
     name: 'My Skin',
     author: '',
     package: 'com.example.myskin',
-    preview: 'icon',
+    preview: 'icon.png',
 };

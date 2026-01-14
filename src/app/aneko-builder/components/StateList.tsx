@@ -101,11 +101,11 @@ export default function StateList({ onEditState }: StateListProps) {
                 <div className={styles.panelContent}>
                     {state.skinData.states.length > 0 ? (
                         <div className={styles.stateList}>
-                            {state.skinData.states.map((motionState) => {
+                            {state.skinData.states.map((motionState, index) => {
                                 const isRequired = isRequiredState(motionState.state);
                                 return (
                                     <div
-                                        key={motionState.state}
+                                        key={`${motionState.state}-${index}`}
                                         className={`${styles.stateItem} ${state.selectedStateId === motionState.state ? styles.selected : ''}`}
                                         onClick={() => selectState(motionState.state)}
                                     >

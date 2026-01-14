@@ -52,7 +52,7 @@ export async function importSkinFromZip(file: File): Promise<SkinData> {
         name: motionParams['@_name'] || DEFAULT_METADATA.name,
         author: motionParams['@_author'] || DEFAULT_METADATA.author,
         package: motionParams['@_package'] || DEFAULT_METADATA.package,
-        preview: String(motionParams['@_preview'] || DEFAULT_METADATA.preview).replace(/\.(png|jpg|jpeg|gif)$/i, ''),
+        preview: String(motionParams['@_preview'] || DEFAULT_METADATA.preview),
     };
 
     // Parse motion params
