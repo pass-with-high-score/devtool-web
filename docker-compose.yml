@@ -65,9 +65,11 @@ services:
       # Telegram Bot Configuration
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_AUTHORIZED_USER_ID=${TELEGRAM_AUTHORIZED_USER_ID}
+      # YouTube Cookies Path (writable location)
+      - YOUTUBE_COOKIES_PATH=/app/data/youtube-cookies.txt
     volumes:
-      # Mount cookies file for live updates without rebuild
-      - ./backend/youtube-cookies.txt:/app/youtube-cookies.txt
+      # Mount data directory for cookies (with proper permissions)
+      - youtube-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3010" ]
@@ -75,3 +77,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+# Named volumes for persistent data
+volumes:
+  youtube-data:
