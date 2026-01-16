@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException, OnModuleInit, BadRequestExceptio
 import { Subject } from 'rxjs';
 import { DatabaseService } from '../database/database.service';
 import { R2Service } from '../storage/r2.service';
-import { ProxyService } from '../proxy/proxy.service';
+
 import { execSync, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -140,7 +140,6 @@ export class YouTubeService implements OnModuleInit {
     constructor(
         private readonly databaseService: DatabaseService,
         private readonly r2Service: R2Service,
-        private readonly proxyService: ProxyService,
     ) { }
 
     async onModuleInit() {
@@ -229,196 +228,172 @@ export class YouTubeService implements OnModuleInit {
             throw new BadRequestException('Invalid YouTube URL');
         }
 
-        // Try without proxy first, then with proxy on failure
-        let lastError: Error | null = null;
-        const attempts = [false, true]; // [without proxy, with proxy]
+        try {
+            // Build yt-dlp arguments for getting video info
+            const args: string[] = [
+                '-j',                   // Output JSON
+                '--no-download',        // Don't download, just get info
+                '--no-warnings',        // Suppress warnings
+                '--no-check-certificates',
+            ];
 
-        for (const useProxy of attempts) {
-            try {
-                // Build yt-dlp arguments for getting video info
-                const args: string[] = [
-                    '-j',                   // Output JSON
-                    '--no-download',        // Don't download, just get info
-                    '--no-warnings',        // Suppress warnings
-                    '--no-check-certificates',
-                ];
+            // Add cookies if available
+            if (this.cookiesPath) {
+                args.push('--cookies', this.cookiesPath);
+            }
 
-                // Add cookies if available
-                if (this.cookiesPath) {
-                    args.push('--cookies', this.cookiesPath);
-                }
+            // Anti-bot measures with bun runtime
+            args.push(
+                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                '--no-js-runtimes',     // Disable default deno first
+                '--js-runtimes', 'bun', // Enable bun runtime
+            );
 
-                // Anti-bot measures with bun runtime
-                args.push(
-                    '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    '--no-js-runtimes',     // Disable default deno first
-                    '--js-runtimes', 'bun', // Enable bun runtime
-                );
+            args.push(url);
 
-                // Add proxy only on retry (second attempt)
-                if (useProxy) {
-                    const proxy = await this.proxyService.getRandomProxy();
-                    if (proxy) {
-                        args.push('--proxy', proxy);
-                        this.logger.log(`🔄 Retrying with proxy: ${proxy}`);
-                    } else {
-                        // No proxy available, skip retry
-                        throw lastError || new Error('No proxy available');
+            // Build command string
+            const command = `${this.ytdlpPath} ${args.map(a => a.includes(' ') ? `"${a}"` : a).join(' ')}`;
+
+            this.logger.log(`🔍 Getting video info for: ${videoId}`);
+            this.logger.debug(`📋 Command: ${command}`);
+
+            const result = execSync(command, {
+                encoding: 'utf-8',
+                maxBuffer: 10 * 1024 * 1024,
+            });
+
+            this.logger.log(`✅ Video info retrieved successfully for: ${videoId}`);
+
+            const info: YtDlpVideoInfo = JSON.parse(result);
+
+            // Parse available video formats from yt-dlp response
+            const heightToFilesize = new Map<number, number>();
+            const bitrateToFilesize = new Map<number, number>();
+
+            for (const format of info.formats || []) {
+                // Video formats: has height and video codec
+                if (format.height && format.vcodec && format.vcodec !== 'none') {
+                    const existingSize = heightToFilesize.get(format.height) || 0;
+                    const formatSize = format.filesize || format.filesize_approx || 0;
+                    if (formatSize > existingSize) {
+                        heightToFilesize.set(format.height, formatSize);
                     }
                 }
+                // Audio formats: has audio codec and bitrate
+                if (format.acodec && format.acodec !== 'none' && format.abr) {
+                    const bitrate = Math.round(format.abr);
+                    const existingSize = bitrateToFilesize.get(bitrate) || 0;
+                    const formatSize = format.filesize || format.filesize_approx || 0;
+                    if (formatSize > existingSize) {
+                        bitrateToFilesize.set(bitrate, formatSize);
+                    }
+                }
+            }
 
-                args.push(url);
+            // Get best audio size to add to video sizes
+            const bestAudioSize = Math.max(...bitrateToFilesize.values(), 0);
 
-                // Build command string
-                const command = `${this.ytdlpPath} ${args.map(a => a.includes(' ') ? `"${a}"` : a).join(' ')}`;
-
-                this.logger.log(`🔍 Getting video info for: ${videoId}${useProxy ? ' (with proxy)' : ''}`);
-                this.logger.debug(`📋 Command: ${command}`);
-
-                const result = execSync(command, {
-                    encoding: 'utf-8',
-                    maxBuffer: 10 * 1024 * 1024,
+            // Build video format options from available heights
+            const standardHeights = [2160, 1440, 1080, 720, 480, 360, 240, 144];
+            const videoFormats: FormatOption[] = standardHeights
+                .filter(h => heightToFilesize.has(h) || [...heightToFilesize.keys()].some(ah => ah >= h))
+                .slice(0, 5) // Max 5 options
+                .map(h => {
+                    // Get filesize for this height, or find closest higher resolution
+                    let filesize = heightToFilesize.get(h) || 0;
+                    if (!filesize) {
+                        const higherRes = [...heightToFilesize.entries()].find(([hh]) => hh >= h);
+                        filesize = higherRes ? higherRes[1] : 0;
+                    }
+                    // Add audio size for video+audio combined estimate
+                    const totalSize = filesize + bestAudioSize;
+                    return {
+                        quality: h >= 2160 ? '4K' : h >= 1440 ? '2K' : `${h}p`,
+                        value: String(h),
+                        filesize: totalSize > 0 ? totalSize : undefined,
+                    };
                 });
 
-                this.logger.log(`✅ Video info retrieved successfully for: ${videoId}`);
+            // Fallback if no video formats found
+            if (videoFormats.length === 0) {
+                videoFormats.push({ quality: 'Best', value: 'bestvideo' });
+            }
 
-                const info: YtDlpVideoInfo = JSON.parse(result);
+            // Build audio format options
+            const audioFormats: FormatOption[] = [
+                { quality: 'Best', value: 'bestaudio', filesize: bestAudioSize > 0 ? bestAudioSize : undefined },
+            ];
 
-                // Parse available video formats from yt-dlp response
-                const heightToFilesize = new Map<number, number>();
-                const bitrateToFilesize = new Map<number, number>();
-
-                for (const format of info.formats || []) {
-                    // Video formats: has height and video codec
-                    if (format.height && format.vcodec && format.vcodec !== 'none') {
-                        const existingSize = heightToFilesize.get(format.height) || 0;
-                        const formatSize = format.filesize || format.filesize_approx || 0;
-                        if (formatSize > existingSize) {
-                            heightToFilesize.set(format.height, formatSize);
-                        }
-                    }
-                    // Audio formats: has audio codec and bitrate
-                    if (format.acodec && format.acodec !== 'none' && format.abr) {
-                        const bitrate = Math.round(format.abr);
-                        const existingSize = bitrateToFilesize.get(bitrate) || 0;
-                        const formatSize = format.filesize || format.filesize_approx || 0;
-                        if (formatSize > existingSize) {
-                            bitrateToFilesize.set(bitrate, formatSize);
-                        }
-                    }
-                }
-
-                // Get best audio size to add to video sizes
-                const bestAudioSize = Math.max(...bitrateToFilesize.values(), 0);
-
-                // Build video format options from available heights
-                const standardHeights = [2160, 1440, 1080, 720, 480, 360, 240, 144];
-                const videoFormats: FormatOption[] = standardHeights
-                    .filter(h => heightToFilesize.has(h) || [...heightToFilesize.keys()].some(ah => ah >= h))
-                    .slice(0, 5) // Max 5 options
-                    .map(h => {
-                        // Get filesize for this height, or find closest higher resolution
-                        let filesize = heightToFilesize.get(h) || 0;
-                        if (!filesize) {
-                            const higherRes = [...heightToFilesize.entries()].find(([hh]) => hh >= h);
-                            filesize = higherRes ? higherRes[1] : 0;
-                        }
-                        // Add audio size for video+audio combined estimate
-                        const totalSize = filesize + bestAudioSize;
-                        return {
-                            quality: h >= 2160 ? '4K' : h >= 1440 ? '2K' : `${h}p`,
-                            value: String(h),
-                            filesize: totalSize > 0 ? totalSize : undefined,
-                        };
+            // Add specific bitrate options if available
+            const sortedBitrates = [...bitrateToFilesize.keys()].sort((a, b) => b - a);
+            for (const bitrate of sortedBitrates.slice(0, 3)) {
+                if (bitrate >= 64) {
+                    audioFormats.push({
+                        quality: `${bitrate}kbps`,
+                        value: String(bitrate),
+                        filesize: bitrateToFilesize.get(bitrate),
                     });
-
-                // Fallback if no video formats found
-                if (videoFormats.length === 0) {
-                    videoFormats.push({ quality: 'Best', value: 'bestvideo' });
                 }
+            }
 
-                // Build audio format options
-                const audioFormats: FormatOption[] = [
-                    { quality: 'Best', value: 'bestaudio', filesize: bestAudioSize > 0 ? bestAudioSize : undefined },
-                ];
+            this.logger.log(`📊 [${videoId}] Available: ${videoFormats.length} video, ${audioFormats.length} audio formats`);
 
-                // Add specific bitrate options if available
-                const sortedBitrates = [...bitrateToFilesize.keys()].sort((a, b) => b - a);
-                for (const bitrate of sortedBitrates.slice(0, 3)) {
-                    if (bitrate >= 64) {
-                        audioFormats.push({
-                            quality: `${bitrate}kbps`,
-                            value: String(bitrate),
-                            filesize: bitrateToFilesize.get(bitrate),
-                        });
-                    }
+            // Parse available subtitles
+            const subtitles: SubtitleInfo[] = [];
+            const langNames: Record<string, string> = {
+                en: 'English', vi: 'Vietnamese', ko: 'Korean', ja: 'Japanese',
+                zh: 'Chinese', es: 'Spanish', fr: 'French', de: 'German',
+                id: 'Indonesian', th: 'Thai', pt: 'Portuguese', ru: 'Russian',
+            };
+
+            // Manual subtitles first
+            if (info.subtitles) {
+                for (const lang of Object.keys(info.subtitles)) {
+                    subtitles.push({
+                        lang,
+                        name: langNames[lang] || lang.toUpperCase(),
+                        autoGenerated: false,
+                    });
                 }
-
-                this.logger.log(`📊 [${videoId}] Available: ${videoFormats.length} video, ${audioFormats.length} audio formats`);
-
-                // Parse available subtitles
-                const subtitles: SubtitleInfo[] = [];
-                const langNames: Record<string, string> = {
-                    en: 'English', vi: 'Vietnamese', ko: 'Korean', ja: 'Japanese',
-                    zh: 'Chinese', es: 'Spanish', fr: 'French', de: 'German',
-                    id: 'Indonesian', th: 'Thai', pt: 'Portuguese', ru: 'Russian',
-                };
-
-                // Manual subtitles first
-                if (info.subtitles) {
-                    for (const lang of Object.keys(info.subtitles)) {
+            }
+            // Then auto-generated
+            if (info.automatic_captions) {
+                for (const lang of Object.keys(info.automatic_captions)) {
+                    if (!subtitles.find(s => s.lang === lang)) {
                         subtitles.push({
                             lang,
-                            name: langNames[lang] || lang.toUpperCase(),
-                            autoGenerated: false,
+                            name: `${langNames[lang] || lang.toUpperCase()} (Auto)`,
+                            autoGenerated: true,
                         });
                     }
                 }
-                // Then auto-generated
-                if (info.automatic_captions) {
-                    for (const lang of Object.keys(info.automatic_captions)) {
-                        if (!subtitles.find(s => s.lang === lang)) {
-                            subtitles.push({
-                                lang,
-                                name: `${langNames[lang] || lang.toUpperCase()} (Auto)`,
-                                autoGenerated: true,
-                            });
-                        }
-                    }
-                }
-
-                this.logger.log(`📝 [${videoId}] Available subtitles: ${subtitles.length}`);
-
-                // Parse chapters
-                const chapters: ChapterInfo[] = (info.chapters || []).map(ch => ({
-                    title: ch.title,
-                    startTime: ch.start_time,
-                    endTime: ch.end_time,
-                }));
-                if (chapters.length > 0) {
-                    this.logger.log(`📖 [${videoId}] Available chapters: ${chapters.length}`);
-                }
-
-                return {
-                    videoId: info.id,
-                    title: info.title || 'Unknown',
-                    thumbnail: info.thumbnail || `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-                    duration: info.duration || 0,
-                    author: info.uploader || 'Unknown',
-                    videoFormats,
-                    audioFormats,
-                    subtitles,
-                    chapters,
-                };
-            } catch (error) {
-                lastError = error as Error;
-                if (!useProxy) {
-                    this.logger.warn(`⚠️ Failed without proxy, will retry with proxy: ${(error as Error).message?.substring(0, 100)}`);
-                    continue; // Try again with proxy
-                }
-                // Both attempts failed
-                this.logger.error('Failed to get video info:', error);
             }
+
+            this.logger.log(`📝 [${videoId}] Available subtitles: ${subtitles.length}`);
+
+            // Parse chapters
+            const chapters: ChapterInfo[] = (info.chapters || []).map(ch => ({
+                title: ch.title,
+                startTime: ch.start_time,
+                endTime: ch.end_time,
+            }));
+            if (chapters.length > 0) {
+                this.logger.log(`📖 [${videoId}] Available chapters: ${chapters.length}`);
+            }
+
+            return {
+                videoId: info.id,
+                title: info.title || 'Unknown',
+                thumbnail: info.thumbnail || `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+                duration: info.duration || 0,
+                author: info.uploader || 'Unknown',
+                videoFormats,
+                audioFormats,
+                subtitles,
+                chapters,
+            };
+        } catch (error) {
+            this.logger.error('Failed to get video info:', error);
         }
 
         // All attempts failed, fallback to oEmbed
@@ -700,12 +675,7 @@ export class YouTubeService implements OnModuleInit {
                 args.push('--cookies', this.cookiesPath);
             }
 
-            // Add proxy if available
-            const proxy = await this.proxyService.getRandomProxy();
-            if (proxy) {
-                args.push('--proxy', proxy);
-                this.logger.log(`🌐 [${id}] Using proxy: ${proxy}`);
-            }
+
 
             // Add format-specific options
             if (request.formatType === 'audio') {

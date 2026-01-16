@@ -62,7 +62,7 @@ services:
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
     volumes:
       # Mount cookies file for live updates without rebuild
-      - ./backend/youtube-cookies.txt:/app/youtube-cookies.txt:ro
+      - ./backend/youtube-cookies.txt:/app/youtube-cookies.txt
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3010" ]
