@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
-import { KeyIcon, UploadIcon, CheckCircleIcon, XCircleIcon, FileIcon, RefreshIcon } from '@/components/Icons';
+import Toast, { useToast } from '@/components/Toast';
+import { KeyIcon, UploadIcon, FileIcon, RefreshIcon, CookieIcon, ShieldIcon } from '@/components/Icons';
 import styles from './page.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL || 'http://localhost:3010';
@@ -22,7 +23,7 @@ export default function CookiesAdminPage() {
     const [cookiesContent, setCookiesContent] = useState('');
     const [status, setStatus] = useState<CookiesStatus | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const { toasts, addToast, removeToast } = useToast();
 
     // Load saved admin key on mount
     useEffect(() => {
@@ -35,12 +36,11 @@ export default function CookiesAdminPage() {
 
     const handleCheckStatus = async () => {
         if (!adminKey) {
-            setMessage({ type: 'error', text: 'Please enter admin key' });
+            addToast('Please enter admin key', 'error');
             return;
         }
 
         setIsLoading(true);
-        setMessage(null);
 
         try {
             const res = await fetch(`${API_BASE}/youtube/cookies/status`, {
@@ -50,7 +50,7 @@ export default function CookiesAdminPage() {
             });
 
             if (res.status === 401) {
-                setMessage({ type: 'error', text: 'Invalid admin key' });
+                addToast('Invalid admin key', 'error');
                 setIsAuthenticated(false);
                 return;
             }
@@ -70,9 +70,9 @@ export default function CookiesAdminPage() {
                 localStorage.removeItem(ADMIN_KEY_STORAGE);
             }
 
-            setMessage({ type: 'success', text: 'Authenticated successfully' });
+            addToast('Authenticated successfully', 'success');
         } catch (error) {
-            setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to connect' });
+            addToast(error instanceof Error ? error.message : 'Failed to connect', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -80,12 +80,11 @@ export default function CookiesAdminPage() {
 
     const handleUpdateCookies = async () => {
         if (!cookiesContent.trim()) {
-            setMessage({ type: 'error', text: 'Please enter cookies content' });
+            addToast('Please enter cookies content', 'error');
             return;
         }
 
         setIsLoading(true);
-        setMessage(null);
 
         try {
             const res = await fetch(`${API_BASE}/youtube/cookies`, {
@@ -98,7 +97,7 @@ export default function CookiesAdminPage() {
             });
 
             if (res.status === 401) {
-                setMessage({ type: 'error', text: 'Invalid admin key' });
+                addToast('Invalid admin key', 'error');
                 setIsAuthenticated(false);
                 return;
             }
@@ -106,15 +105,15 @@ export default function CookiesAdminPage() {
             const data = await res.json();
 
             if (data.success) {
-                setMessage({ type: 'success', text: data.message });
+                addToast(data.message, 'success');
                 setCookiesContent('');
                 // Refresh status
                 handleCheckStatus();
             } else {
-                setMessage({ type: 'error', text: data.message });
+                addToast(data.message, 'error');
             }
         } catch (error) {
-            setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to update cookies' });
+            addToast(error instanceof Error ? error.message : 'Failed to update cookies', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -145,26 +144,27 @@ export default function CookiesAdminPage() {
         <div className={styles.container}>
             <div className={styles.backgroundGradient}></div>
             <Navigation />
+            <Toast toasts={toasts} removeToast={removeToast} />
+
+            {/* Header */}
+            <header className={styles.header}>
+                <div className={styles.logo}>
+                    <div className={styles.logoIcon}>
+                        <CookieIcon size={28} />
+                    </div>
+                    <h1>Cookies Admin</h1>
+                </div>
+                <p className={styles.tagline}>
+                    Secure YouTube cookies management
+                </p>
+            </header>
 
             <main className={styles.main}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>🍪 Cookies Admin</h1>
-                    <p className={styles.subtitle}>Update YouTube cookies file</p>
-                </div>
-
-                {/* Message Alert */}
-                {message && (
-                    <div className={`${styles.alert} ${message.type === 'success' ? styles.alertSuccess : styles.alertError}`}>
-                        {message.type === 'success' ? <CheckCircleIcon size={18} /> : <XCircleIcon size={18} />}
-                        {message.text}
-                    </div>
-                )}
-
                 {/* Authentication Card */}
                 <div className={styles.card}>
                     <div className={styles.cardHeader}>
                         <KeyIcon size={20} />
-                        Authentication
+                        <span>Authentication</span>
                     </div>
 
                     <div className={styles.inputGroup}>
@@ -192,16 +192,14 @@ export default function CookiesAdminPage() {
                         </label>
                     </div>
 
-                    <div className={styles.buttonGroup}>
-                        <button
-                            className={`${styles.btn} ${styles.btnPrimary}`}
-                            onClick={handleCheckStatus}
-                            disabled={isLoading || !adminKey}
-                        >
-                            {isLoading ? <div className={styles.spinner}></div> : <RefreshIcon size={18} />}
-                            Check Status
-                        </button>
-                    </div>
+                    <button
+                        className={`${styles.btn} ${styles.btnPrimary}`}
+                        onClick={handleCheckStatus}
+                        disabled={isLoading || !adminKey}
+                    >
+                        {isLoading ? <div className={styles.spinner}></div> : <RefreshIcon size={18} />}
+                        Check Status
+                    </button>
                 </div>
 
                 {/* Status Card */}
@@ -209,7 +207,7 @@ export default function CookiesAdminPage() {
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <FileIcon size={20} />
-                            Current Status
+                            <span>Current Status</span>
                         </div>
 
                         <div className={styles.statusCard}>
@@ -244,7 +242,7 @@ export default function CookiesAdminPage() {
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <UploadIcon size={20} />
-                            Update Cookies
+                            <span>Update Cookies</span>
                         </div>
 
                         <input
@@ -289,8 +287,9 @@ export default function CookiesAdminPage() {
                 )}
 
                 {/* Warning */}
-                <div className={`${styles.alert} ${styles.alertWarning}`}>
-                    ⚠️ This page is for administrators only. Never share your admin key.
+                <div className={styles.warningCard}>
+                    <ShieldIcon size={20} />
+                    <span>This page is for administrators only. Never share your admin key.</span>
                 </div>
             </main>
         </div>
