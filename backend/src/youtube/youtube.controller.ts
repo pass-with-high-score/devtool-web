@@ -6,7 +6,9 @@ import {
     Body,
     Param,
     Res,
+    Headers,
     BadRequestException,
+    UnauthorizedException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { DownloadRequest, DownloadResult, VideoInfo, PlaylistInfo, DirectLinkResult, YouTubeService } from './youtube.service';
@@ -142,6 +144,41 @@ export class YouTubeController {
             res.status(500).json({ error: 'Failed to download' });
         }
     }
+
+    // ==================== COOKIES ADMIN ENDPOINTS ====================
+    // These endpoints must be placed BEFORE :id routes to avoid route conflicts
+
+    /**
+     * Get cookies file status (admin only)
+     */
+    @Get('cookies/status')
+    getCookiesStatus(
+        @Headers('x-admin-key') adminKey: string,
+    ): { exists: boolean; path: string; lastModified?: Date; size?: number } {
+        if (!this.youtubeService.validateAdminKey(adminKey)) {
+            throw new UnauthorizedException('Invalid admin key');
+        }
+        return this.youtubeService.getCookiesStatus();
+    }
+
+    /**
+     * Update cookies file (admin only)
+     */
+    @Post('cookies')
+    updateCookies(
+        @Headers('x-admin-key') adminKey: string,
+        @Body() body: { content: string },
+    ): { success: boolean; message: string } {
+        if (!this.youtubeService.validateAdminKey(adminKey)) {
+            throw new UnauthorizedException('Invalid admin key');
+        }
+        if (!body.content) {
+            throw new BadRequestException('Cookies content is required');
+        }
+        return this.youtubeService.updateCookies(body.content);
+    }
+
+    // ==================== DYNAMIC ID ROUTES ====================
 
     /**
      * Get download status

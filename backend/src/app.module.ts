@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DatabaseModule } from './database/database.module';
 import { StorageModule } from './storage/storage.module';
 import { CleanupModule } from './cleanup/cleanup.module';
 import { ChatModule } from './chat/chat.module';
 import { SpeechModule } from './speech/speech.module';
 import { YouTubeModule } from './youtube/youtube.module';
-import { ProxyModule } from './proxy/proxy.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
     imports: [
@@ -16,13 +17,14 @@ import { ProxyModule } from './proxy/proxy.module';
             envFilePath: '.env',
         }),
         ScheduleModule.forRoot(),
+        EventEmitterModule.forRoot(),
         DatabaseModule,
         StorageModule,
         CleanupModule,
         ChatModule,
         SpeechModule,
         YouTubeModule,
-        ProxyModule,
+        TelegramModule,
     ],
 })
 export class AppModule { }

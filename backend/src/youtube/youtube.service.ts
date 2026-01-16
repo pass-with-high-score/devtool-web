@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException, OnModuleInit, BadRequestException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Subject } from 'rxjs';
 import { DatabaseService } from '../database/database.service';
 import { R2Service } from '../storage/r2.service';
@@ -140,6 +141,7 @@ export class YouTubeService implements OnModuleInit {
     constructor(
         private readonly databaseService: DatabaseService,
         private readonly r2Service: R2Service,
+        private readonly eventEmitter: EventEmitter2,
     ) { }
 
     async onModuleInit() {
@@ -1037,6 +1039,16 @@ export class YouTubeService implements OnModuleInit {
             await this.databaseService.sql`
                 UPDATE youtube_downloads SET status = 'failed', error = ${errorMessage} WHERE id = ${id}
             `;
+
+            // Emit download failure event for Telegram notification
+            this.eventEmitter.emit('youtube.download.failed', {
+                id,
+                url: request.url,
+                formatType: request.formatType,
+                quality: request.quality,
+                error: errorMessage,
+            });
+
             // Emit SSE event for failed status
             this.emitProgress(id);
             // Cleanup progress map
@@ -1457,4 +1469,128 @@ export class YouTubeService implements OnModuleInit {
             );
         }
     }
+
+    /**
+     * Get current cookies file status (basic info only)
+     */
+    getCookiesStatus(): {
+        exists: boolean;
+        path: string;
+        lastModified?: Date;
+        size?: number;
+    } {
+        const cookiesFile = process.env.YOUTUBE_COOKIES_PATH || './youtube-cookies.txt';
+
+        if (!fs.existsSync(cookiesFile)) {
+            return { exists: false, path: cookiesFile };
+        }
+
+        const stats = fs.statSync(cookiesFile);
+        return {
+            exists: true,
+            path: cookiesFile,
+            lastModified: stats.mtime,
+            size: stats.size,
+        };
+    }
+
+    /**
+     * Test if cookies are actually working by making a real yt-dlp request
+     * Uses a known YouTube video to verify authentication
+     */
+    async testCookiesValidity(): Promise<{ isValid: boolean; message: string }> {
+        const cookiesFile = process.env.YOUTUBE_COOKIES_PATH || './youtube-cookies.txt';
+
+        if (!fs.existsSync(cookiesFile)) {
+            return { isValid: false, message: 'Cookies file not found' };
+        }
+
+        try {
+            // Test with a simple video info request using cookies
+            // Using a popular, stable video that should always be available
+            const testVideoUrl = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'; // "Me at the zoo" - first YouTube video
+
+            const args = [
+                '-j',
+                '--no-download',
+                '--no-warnings',
+                '--cookies', cookiesFile,
+                testVideoUrl,
+            ];
+
+            const command = `${this.ytdlpPath} ${args.map(a => a.includes(' ') ? `"${a}"` : a).join(' ')}`;
+
+            execSync(command, {
+                encoding: 'utf-8',
+                timeout: 30000,
+                maxBuffer: 5 * 1024 * 1024,
+            });
+
+            return { isValid: true, message: 'Cookies are working correctly' };
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+
+            // Check for common auth-related errors
+            if (errorMsg.includes('Sign in') || errorMsg.includes('403') || errorMsg.includes('login')) {
+                return { isValid: false, message: 'Cookies expired or invalid - authentication failed' };
+            }
+            if (errorMsg.includes('bot') || errorMsg.includes('429')) {
+                return { isValid: false, message: 'Rate limited by YouTube - try again later' };
+            }
+
+            return { isValid: false, message: `Test failed: ${errorMsg.substring(0, 100)}` };
+        }
+    }
+
+    /**
+     * Update cookies file content
+     */
+    updateCookies(content: string): { success: boolean; message: string } {
+        const cookiesFile = process.env.YOUTUBE_COOKIES_PATH || './youtube-cookies.txt';
+
+        try {
+            // Validate content looks like Netscape cookies format
+            const lines = content.trim().split('\n');
+            const hasValidFormat = lines.some(line =>
+                line.startsWith('#') ||
+                line.includes('\t') && line.includes('.youtube.com')
+            );
+
+            if (!hasValidFormat) {
+                return {
+                    success: false,
+                    message: 'Invalid cookies format. Expected Netscape HTTP Cookie format.'
+                };
+            }
+
+            // Write to file
+            fs.writeFileSync(cookiesFile, content, 'utf-8');
+
+            // Reload cookies path
+            this.cookiesPath = cookiesFile;
+            this.logger.log(`🍪 YouTube cookies updated successfully: ${cookiesFile}`);
+
+            return { success: true, message: 'Cookies updated successfully' };
+        } catch (error) {
+            this.logger.error('Failed to update cookies:', error);
+            return {
+                success: false,
+                message: `Failed to write cookies file: ${error instanceof Error ? error.message : 'Unknown error'}`
+            };
+        }
+    }
+
+    /**
+     * Validate admin key for cookies management
+     */
+    validateAdminKey(key: string): boolean {
+        const adminKey = process.env.YOUTUBE_ADMIN_KEY;
+        if (!adminKey) {
+            this.logger.warn('⚠️ YOUTUBE_ADMIN_KEY not set in environment');
+            return false;
+        }
+        return key === adminKey;
+    }
 }
+
+
