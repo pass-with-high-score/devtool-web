@@ -70,6 +70,8 @@ services:
     volumes:
       # Mount data directory for cookies (with proper permissions)
       - youtube-data:/app/data
+    command: >
+      sh -c "mkdir -p /app/data && chmod 777 /app/data && node dist/main"
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3010" ]
