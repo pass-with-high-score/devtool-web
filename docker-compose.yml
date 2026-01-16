@@ -6,6 +6,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
+        NEXT_PUBLIC_CHAT_URL: ${NEXT_PUBLIC_CHAT_URL}
     ports:
       - "3000:3000"
     environment:

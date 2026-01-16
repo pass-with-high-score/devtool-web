@@ -28,6 +28,12 @@ ENV NODE_ENV=production
 # Dummy DATABASE_URL for build time (actual value provided at runtime)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
+# Build arguments for client-side environment variables
+ARG NEXT_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_CHAT_URL
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_CHAT_URL=$NEXT_PUBLIC_CHAT_URL
+
 # Build the application
 RUN npm run build
 
