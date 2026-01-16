@@ -60,6 +60,11 @@ services:
       - S3_BUCKET=${S3_BUCKET}
       # Deepgram API Key
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      # YouTube Cookies Admin Key
+      - YOUTUBE_ADMIN_KEY=${YOUTUBE_ADMIN_KEY}
+      # Telegram Bot Configuration
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_AUTHORIZED_USER_ID=${TELEGRAM_AUTHORIZED_USER_ID}
     volumes:
       # Mount cookies file for live updates without rebuild
       - ./backend/youtube-cookies.txt:/app/youtube-cookies.txt
