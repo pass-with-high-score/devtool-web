@@ -244,11 +244,8 @@ export class YouTubeService implements OnModuleInit {
                 args.push('--cookies', this.cookiesPath);
             }
 
-            // Anti-bot measures with bun runtime
             args.push(
-                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                '--no-js-runtimes',     // Disable default deno first
-                '--js-runtimes', 'bun', // Enable bun runtime
+                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             );
 
             args.push(url);
@@ -665,15 +662,12 @@ export class YouTubeService implements OnModuleInit {
                 ext = outputFormat;
             }
 
-            // Build yt-dlp command with bun runtime
             const args = [
                 '-f', formatArg,
                 '-o', outputTemplate,
                 '--no-playlist',
                 '--no-warnings',
                 '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                '--no-js-runtimes',
-                '--js-runtimes', 'bun',
                 '--no-check-certificates',
                 '--retries', '3',
                 '--embed-metadata', // Embed video metadata (title, artist, description, etc.)
