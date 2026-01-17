@@ -499,11 +499,50 @@
     padding: 0.5rem;
     background: var(--neo-white);
     border: 2px solid var(--neo-black);
-    cursor: pointer;
+    position: relative;
 }
 
 .frameItem:hover {
     background: var(--neo-yellow);
+}
+
+/* Move buttons container - absolute positioned for frameItem */
+.moveButtons {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    position: absolute;
+    top: 4px;
+    left: 4px;
+}
+
+/* Move buttons inline - for repeat header */
+.moveButtonsInline {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+}
+
+.moveBtn {
+    width: 16px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-white);
+    border: 1px solid var(--neo-black);
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.1s ease;
+}
+
+.moveBtn:hover:not(:disabled) {
+    background: var(--neo-cyan);
+}
+
+.moveBtn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
 }
 
 .frameItem img {

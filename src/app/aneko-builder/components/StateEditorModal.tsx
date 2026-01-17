@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useSkinBuilder } from '@/lib/contexts/SkinBuilderContext';
 import { MotionState, AnimationItem, Asset } from '@/lib/types/skin';
-import { TrashIcon, PlusIcon, RefreshIcon } from '@/components/Icons';
+import { TrashIcon, PlusIcon, RefreshIcon, SwitchIcon, ArrowLeftIcon, ArrowRightIcon } from '@/components/Icons';
 import styles from '../page.module.css';
 
 interface StateEditorModalProps {
@@ -19,7 +19,8 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
         currentState || { state: stateId, items: [] }
     );
     const [showAssetPicker, setShowAssetPicker] = useState(false);
-    const [targetRepeatPath, setTargetRepeatPath] = useState<number[] | null>(null); // null = add to root, array = path to repeat-item
+    const [targetRepeatPath, setTargetRepeatPath] = useState<number[] | null>(null);
+    const [replaceTargetPath, setReplaceTargetPath] = useState<number[] | null>(null);
 
     const handleAddFrame = useCallback((asset: Asset) => {
         const newItem: AnimationItem = {
@@ -28,14 +29,21 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
             duration: 250,
         };
 
-        if (targetRepeatPath === null) {
-            // Add to root
+        if (replaceTargetPath !== null) {
+            setEditedState(prev => ({
+                ...prev,
+                items: updateItemAtPath(prev.items, replaceTargetPath, (item) => ({
+                    ...newItem,
+                    duration: item.duration || 250,
+                })),
+            }));
+            setReplaceTargetPath(null);
+        } else if (targetRepeatPath === null) {
             setEditedState(prev => ({
                 ...prev,
                 items: [...prev.items, newItem],
             }));
         } else {
-            // Add to specific repeat-item
             setEditedState(prev => ({
                 ...prev,
                 items: addItemToPath(prev.items, targetRepeatPath, newItem),
@@ -43,7 +51,7 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
         }
         setShowAssetPicker(false);
         setTargetRepeatPath(null);
-    }, [targetRepeatPath]);
+    }, [targetRepeatPath, replaceTargetPath]);
 
     // Helper to add item to a repeat-item at given path
     const addItemToPath = (items: AnimationItem[], path: number[], newItem: AnimationItem): AnimationItem[] => {
@@ -69,7 +77,7 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
             if (i !== first) return item;
             if (rest.length === 0) {
                 const result = updater(item);
-                return result; // may be null for removal
+                return result;
             }
             if (item.type === 'repeat-item' && item.items) {
                 return { ...item, items: updateItemAtPath(item.items, rest, updater) };
@@ -77,6 +85,77 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
             return item;
         }).filter((item): item is AnimationItem => item !== null);
     };
+
+    // Helper to get siblings count at the same parent level
+    const getSiblingsCount = (items: AnimationItem[], path: number[]): number => {
+        if (path.length === 0) return 0;
+        if (path.length === 1) return items.length;
+
+        const [first, ...rest] = path;
+        const item = items[first];
+        if (item?.type === 'repeat-item' && item.items) {
+            return getSiblingsCount(item.items, rest);
+        }
+        return 0;
+    };
+
+    // Move item up in its parent array
+    const handleMoveUp = useCallback((path: number[]) => {
+        if (path.length === 0) return;
+        const currentIndex = path[path.length - 1];
+        if (currentIndex === 0) return; // Already at top
+
+        setEditedState(prev => {
+            const swapAtLevel = (items: AnimationItem[], targetPath: number[]): AnimationItem[] => {
+                if (targetPath.length === 1) {
+                    const idx = targetPath[0];
+                    const newItems = [...items];
+                    [newItems[idx - 1], newItems[idx]] = [newItems[idx], newItems[idx - 1]];
+                    return newItems;
+                }
+
+                const [first, ...rest] = targetPath;
+                return items.map((item, i) => {
+                    if (i !== first) return item;
+                    if (item.type === 'repeat-item' && item.items) {
+                        return { ...item, items: swapAtLevel(item.items, rest) };
+                    }
+                    return item;
+                });
+            };
+
+            return { ...prev, items: swapAtLevel(prev.items, path) };
+        });
+    }, []);
+
+    // Move item down in its parent array
+    const handleMoveDown = useCallback((path: number[], siblingsCount: number) => {
+        if (path.length === 0) return;
+        const currentIndex = path[path.length - 1];
+        if (currentIndex >= siblingsCount - 1) return; // Already at bottom
+
+        setEditedState(prev => {
+            const swapAtLevel = (items: AnimationItem[], targetPath: number[]): AnimationItem[] => {
+                if (targetPath.length === 1) {
+                    const idx = targetPath[0];
+                    const newItems = [...items];
+                    [newItems[idx], newItems[idx + 1]] = [newItems[idx + 1], newItems[idx]];
+                    return newItems;
+                }
+
+                const [first, ...rest] = targetPath;
+                return items.map((item, i) => {
+                    if (i !== first) return item;
+                    if (item.type === 'repeat-item' && item.items) {
+                        return { ...item, items: swapAtLevel(item.items, rest) };
+                    }
+                    return item;
+                });
+            };
+
+            return { ...prev, items: swapAtLevel(prev.items, path) };
+        });
+    }, []);
 
     const handleRemoveItem = useCallback((path: number[]) => {
         setEditedState(prev => ({
@@ -107,18 +186,22 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
         };
 
         if (targetPath === undefined) {
-            // Add to root
             setEditedState(prev => ({
                 ...prev,
                 items: [...prev.items, newRepeat],
             }));
         } else {
-            // Add to specific repeat-item
             setEditedState(prev => ({
                 ...prev,
                 items: addItemToPath(prev.items, targetPath, newRepeat),
             }));
         }
+    }, []);
+
+    const handleReplaceFrame = useCallback((path: number[]) => {
+        setReplaceTargetPath(path);
+        setTargetRepeatPath(null);
+        setShowAssetPicker(true);
     }, []);
 
     const handleSave = useCallback(() => {
@@ -141,13 +224,36 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
 
     // Render items hierarchically
     const renderItems = (items: AnimationItem[], parentPath: number[] = []) => {
+        const siblingsCount = items.length;
+
         return items.map((item, idx) => {
             const currentPath = [...parentPath, idx];
+            const isFirst = idx === 0;
+            const isLast = idx === siblingsCount - 1;
 
             if (item.type === 'item') {
                 const asset = getAssetByFilename(item.drawable || '');
                 return (
                     <div key={currentPath.join('-')} className={styles.frameItem}>
+                        {/* Move buttons */}
+                        <div className={styles.moveButtons}>
+                            <button
+                                className={styles.moveBtn}
+                                onClick={() => handleMoveUp(currentPath)}
+                                disabled={isFirst}
+                                title="Move left"
+                            >
+                                <ArrowLeftIcon size={10} />
+                            </button>
+                            <button
+                                className={styles.moveBtn}
+                                onClick={() => handleMoveDown(currentPath, siblingsCount)}
+                                disabled={isLast}
+                                title="Move right"
+                            >
+                                <ArrowRightIcon size={10} />
+                            </button>
+                        </div>
                         {asset ? (
                             <img src={asset.dataUrl} alt={item.drawable} />
                         ) : (
@@ -164,8 +270,16 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
                         />
                         <span className={styles.frameDuration}>ms</span>
                         <button
+                            onClick={() => handleReplaceFrame(currentPath)}
+                            style={{ background: 'var(--neo-blue)', color: 'white', border: 'none', cursor: 'pointer', padding: '0.2rem 0.4rem', fontSize: '0.7rem' }}
+                            title="Replace image"
+                        >
+                            <SwitchIcon size={10} />
+                        </button>
+                        <button
                             onClick={() => handleRemoveItem(currentPath)}
                             style={{ background: 'var(--neo-red)', color: 'white', border: 'none', cursor: 'pointer', padding: '0.2rem 0.4rem', fontSize: '0.7rem' }}
+                            title="Delete frame"
                         >
                             <TrashIcon size={10} />
                         </button>
@@ -175,6 +289,25 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
                 return (
                     <div key={currentPath.join('-')} className={styles.repeatGroup}>
                         <div className={styles.repeatHeader}>
+                            {/* Move buttons - inline for repeat header */}
+                            <div className={styles.moveButtonsInline}>
+                                <button
+                                    className={styles.moveBtn}
+                                    onClick={() => handleMoveUp(currentPath)}
+                                    disabled={isFirst}
+                                    title="Move left"
+                                >
+                                    <ArrowLeftIcon size={10} />
+                                </button>
+                                <button
+                                    className={styles.moveBtn}
+                                    onClick={() => handleMoveDown(currentPath, siblingsCount)}
+                                    disabled={isLast}
+                                    title="Move right"
+                                >
+                                    <ArrowRightIcon size={10} />
+                                </button>
+                            </div>
                             <RefreshIcon size={14} />
                             <span>Repeat</span>
                             <input
@@ -200,6 +333,7 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
                                 className={styles.addFrameBtnSmall}
                                 onClick={() => {
                                     setTargetRepeatPath(currentPath);
+                                    setReplaceTargetPath(null);
                                     setShowAssetPicker(true);
                                 }}
                                 title="Add frame to this repeat group"
@@ -249,6 +383,7 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
                             className={styles.addFrameBtn}
                             onClick={() => {
                                 setTargetRepeatPath(null);
+                                setReplaceTargetPath(null);
                                 setShowAssetPicker(true);
                             }}
                             title="Add frame"
@@ -267,13 +402,13 @@ export default function StateEditorModal({ stateId, onClose }: StateEditorModalP
 
             {/* Asset Picker Modal */}
             {showAssetPicker && (
-                <div className={styles.modalOverlay} onClick={() => { setShowAssetPicker(false); setTargetRepeatPath(null); }} style={{ background: 'rgba(0,0,0,0.7)' }}>
+                <div className={styles.modalOverlay} onClick={() => { setShowAssetPicker(false); setTargetRepeatPath(null); setReplaceTargetPath(null); }} style={{ background: 'rgba(0,0,0,0.7)' }}>
                     <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
                         <div className={styles.modalHeader}>
                             <span className={styles.modalTitle}>
-                                Select Sprite {targetRepeatPath !== null && '(for repeat group)'}
+                                {replaceTargetPath !== null ? 'Replace Sprite' : 'Select Sprite'} {targetRepeatPath !== null && '(for repeat group)'}
                             </span>
-                            <button className={styles.modalClose} onClick={() => { setShowAssetPicker(false); setTargetRepeatPath(null); }}>×</button>
+                            <button className={styles.modalClose} onClick={() => { setShowAssetPicker(false); setTargetRepeatPath(null); setReplaceTargetPath(null); }}>×</button>
                         </div>
                         <div className={styles.modalContent}>
                             {state.skinData.assets.length > 0 ? (

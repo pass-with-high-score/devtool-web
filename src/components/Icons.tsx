@@ -665,3 +665,26 @@ export function CookieIcon({ className, size = 24, ...props }: IconProps) {
     );
 }
 
+export function GripVerticalIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <circle cx="9" cy="12" r="1" />
+            <circle cx="9" cy="5" r="1" />
+            <circle cx="9" cy="19" r="1" />
+            <circle cx="15" cy="12" r="1" />
+            <circle cx="15" cy="5" r="1" />
+            <circle cx="15" cy="19" r="1" />
+        </svg>
+    );
+}
+
+export function SwitchIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M17 1l4 4-4 4" />
+            <path d="M3 11V9a4 4 0 014-4h14" />
+            <path d="M7 23l-4-4 4-4" />
+            <path d="M21 13v2a4 4 0 01-4 4H3" />
+        </svg>
+    );
+}
