@@ -139,7 +139,7 @@ export default function Navigation() {
 
                         {/* GitHub Link */}
                         <a
-                            href="https://github.com/pass-with-high-score/check-subdomain"
+                            href="https://github.com/pass-with-high-score/devtool-web"
                             target="_blank"
                             rel="noopener noreferrer"
                             className={styles.githubLink}
@@ -184,7 +184,7 @@ export default function Navigation() {
                             ))}
                         </div>
                         <a
-                            href="https://github.com/pass-with-high-score/check-subdomain"
+                            href="https://github.com/pass-with-high-score/devtool-web"
                             target="_blank"
                             rel="noopener noreferrer"
                             className={styles.mobileGithubLink}

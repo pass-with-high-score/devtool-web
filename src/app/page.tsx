@@ -154,7 +154,7 @@ export default function HomePage() {
                         No signup required. 100% client-side processing.
                     </p>
                     <a
-                        href="https://github.com/pass-with-high-score/check-subdomain"
+                        href="https://github.com/pass-with-high-score/devtool-web"
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.githubButton}
