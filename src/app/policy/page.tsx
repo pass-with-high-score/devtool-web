@@ -48,11 +48,15 @@ export default function PolicyPage() {
                         <li><strong>Anonymous Chat:</strong> Messages are stored in our database and kept for a limited time. Random usernames are generated and saved in your browser for session continuity. Chat is public and visible to all users.</li>
                         <li><strong>Speech to Text:</strong> Audio files you upload are temporarily stored on our servers for transcription using Deepgram API. Audio and transcripts are automatically deleted after 1 hour. We do not use your audio for any other purpose.</li>
                         <li><strong>YouTube Downloader:</strong> Video and audio files you download are temporarily stored on our servers. All downloaded files are automatically deleted after 1 hour. We do not track or store the URLs you submit.</li>
+                        <li><strong>IP Address Checker:</strong> Your public IP address is fetched from our external API (checkip.pwhs.app) to display location information. We do not store or log your IP address.</li>
+                        <li><strong>Audio Player:</strong> All audio playback happens 100% locally in your browser. Your audio files are never uploaded to our servers.</li>
+                        <li><strong>Video Player:</strong> All video playback happens 100% locally in your browser. Your video and subtitle files are never uploaded to our servers.</li>
+                        <li><strong>Stream Player:</strong> HLS streams are played directly from the source URL in your browser. Stream URL history is stored only in your browser's local storage.</li>
                     </ul>
 
                     <h3>2. Analytics</h3>
                     <p>
-                        We use Google Analytics to understand how visitors use our website. This helps us improve the user experience. Google Analytics collects anonymized data such as pages visited, time spent, and general location. No personally identifiable information is collected.
+                        We use Google Analytics and Vercel Analytics to understand how visitors use our website. This helps us improve the user experience. These services collect anonymized data such as pages visited, time spent, and general location. No personally identifiable information is collected. Additionally, Vercel Speed Insights may collect performance metrics to help us optimize page load times.
                     </p>
 
                     <h3>3. Local Storage</h3>
