@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'JSON Server - Mock REST API Generator',
     description: 'Create instant mock REST APIs from JSON data. Perfect for frontend development, prototyping, and testing. Supports CRUD operations, pagination, filtering, and more.',
+    alternates: {
+        canonical: '/json',
+    },
     keywords: [
         'JSON server',
         'mock API',

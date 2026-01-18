@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'File Transfer - Fast & Secure File Sharing',
     description: 'Transfer files quickly and securely between devices. Share large files with auto-expiring links. No account required. Free file transfer service.',
+    alternates: {
+        canonical: '/transfer',
+    },
     keywords: [
         'file transfer',
         'file sharing',

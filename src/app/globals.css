@@ -1,5 +1,6 @@
 /* Neo-Brutalism Global Styles */
-@import url('https://fonts.googleapis.com/css2?family=Lexend+Mega:wght@400;500;600;700;800;900&family=Public+Sans:wght@400;500;600;700&display=swap');
+/* Note: Fonts are loaded via next/font in layout.tsx for better performance */
+
 
 :root {
   /* Neo-Brutalism Color Palette */

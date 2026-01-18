@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Subdomain Scanner - Discover Subdomains & Detect Cloudflare',
     description: 'Discover subdomains using Certificate Transparency logs, VirusTotal, Shodan, and Subfinder. Resolve DNS records and detect Cloudflare protection. Free online subdomain enumeration tool.',
+    alternates: {
+        canonical: '/check-subdomain',
+    },
     keywords: [
         'subdomain scanner',
         'subdomain finder',

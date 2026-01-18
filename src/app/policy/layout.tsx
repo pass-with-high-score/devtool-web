@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Privacy Policy - DevTools',
     description: 'Read our privacy policy. Learn how DevTools handles your data with a focus on privacy and transparency. No tracking, no data selling.',
+    alternates: {
+        canonical: '/policy',
+    },
     keywords: [
         'privacy policy',
         'terms of service',

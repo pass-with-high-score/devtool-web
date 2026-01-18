@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Community Chat - Real-time Developer Chat',
     description: 'Join the DevTools community chat. Connect with developers, share knowledge, ask questions, and discuss programming topics in real-time.',
+    alternates: {
+        canonical: '/chat',
+    },
     keywords: [
         'developer chat',
         'community chat',

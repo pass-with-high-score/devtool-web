@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'ANeko Builder - Custom Android Cat Skin Creator',
     description: 'Create custom ANeko skins for Android. Design and build your own cat pet character with custom images, animations, and behaviors. Free online ANeko skin builder.',
+    alternates: {
+        canonical: '/aneko-builder',
+    },
     keywords: [
         'ANeko builder',
         'ANeko skin creator',

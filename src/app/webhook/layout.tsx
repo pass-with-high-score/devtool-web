@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Webhook Tester - Receive & Inspect Webhooks',
     description: 'Free online webhook testing tool. Receive and inspect webhook requests from services like GitHub, Stripe, Shopify, Slack, and more.',
+    alternates: {
+        canonical: '/webhook',
+    },
     keywords: [
         'webhook tester',
         'webhook testing',

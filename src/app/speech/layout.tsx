@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Speech to Text - Audio Transcription Tool',
     description: 'Convert speech to text with high accuracy. Upload audio files or record directly. Support for multiple languages and formats. Free online transcription tool.',
+    alternates: {
+        canonical: '/speech',
+    },
     keywords: [
         'speech to text',
         'audio transcription',

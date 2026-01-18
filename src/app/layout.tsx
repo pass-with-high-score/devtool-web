@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Lexend_Mega } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import Script from "next/script";
 import "./globals.css";
 import FeedbackButton from "@/components/FeedbackButton";
 
@@ -9,6 +10,7 @@ const lexendMega = Lexend_Mega({
   variable: "--font-lexend-mega",
   subsets: ["latin"],
   weight: ["400", "700", "800", "900"],
+  display: "swap", // Prevents FOIT, improves CLS
 });
 
 const siteConfig = {
@@ -24,6 +26,9 @@ export const metadata: Metadata = {
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  alternates: {
+    canonical: "/",
+  },
   keywords: [
     "developer tools",
     "subdomain scanner",
@@ -68,7 +73,7 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.svg",
         width: 1200,
         height: 630,
         alt: "DevTools - Free Online Developer Tools",
@@ -79,7 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${siteConfig.name} - Free Online Developer Tools`,
     description: siteConfig.description,
-    images: ["/og-image.png"],
+    images: ["/og-image.svg"],
   },
   icons: {
     icon: "/favicon.svg",
@@ -117,18 +122,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Google Analytics */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYS24MWFYG" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-LYS24MWFYG');
-            `,
-          }}
-        />
         <script
           type="application/ld+json"
           suppressHydrationWarning
@@ -142,6 +135,20 @@ export default function RootLayout({
         <FeedbackButton />
         <Analytics />
         <SpeedInsights />
+
+        {/* Google Analytics - moved to body with afterInteractive for better LCP */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-LYS24MWFYG"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-LYS24MWFYG');
+          `}
+        </Script>
       </body>
     </html>
   );

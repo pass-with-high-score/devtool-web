@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Base64 Image - View & Encode Images',
     description: 'View Base64 encoded images or convert images to Base64 strings. Supports drag & drop, copy to clipboard, and download. Free online Base64 image tool.',
+    alternates: {
+        canonical: '/base64',
+    },
     keywords: [
         'base64 image',
         'base64 viewer',

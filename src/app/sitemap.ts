@@ -2,7 +2,8 @@ import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const lastModified = new Date();
+    // Use fixed date for cache stability - update on significant changes
+    const lastModified = new Date('2026-01-18');
 
     return [
         {
@@ -81,7 +82,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
             url: `${baseUrl}/policy`,
             lastModified,
             changeFrequency: 'monthly',
-            priority: 0.8,
+            priority: 0.5,
+        },
+        {
+            url: `${baseUrl}/about`,
+            lastModified,
+            changeFrequency: 'yearly',
+            priority: 0.5,
         },
         {
             url: `${baseUrl}/youtube`,
@@ -115,3 +122,4 @@ export default function sitemap(): MetadataRoute.Sitemap {
         },
     ];
 }
+

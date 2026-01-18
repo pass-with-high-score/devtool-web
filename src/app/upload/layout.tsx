@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Image Uploader - Free Image Hosting',
     description: 'Upload and share images instantly. Get direct links for embedding. Support for multiple formats including PNG, JPG, GIF, WebP. Free image hosting service.',
+    alternates: {
+        canonical: '/upload',
+    },
     keywords: [
         'image uploader',
         'image hosting',

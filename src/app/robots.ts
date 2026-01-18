@@ -8,9 +8,21 @@ export default function robots(): MetadataRoute.Robots {
             {
                 userAgent: '*',
                 allow: '/',
+                disallow: [
+                    '/api/',
+                    '/j/',                    // Short redirect routes
+                    '/_next/',                // Next.js internals
+                    '/webhook/*/events',      // Dynamic webhook data
+                ],
+            },
+            {
+                userAgent: 'Googlebot',
+                allow: '/',
                 disallow: ['/api/'],
             },
         ],
         sitemap: `${baseUrl}/sitemap.xml`,
+        host: baseUrl,
     };
 }
+

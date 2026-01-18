@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'OTP Generator - TOTP Code Generator',
     description: 'Generate Time-based One-Time Password (TOTP) codes from your secret keys. Support for saving keys, password protection, QR code export, and multiple authenticator formats.',
+    alternates: {
+        canonical: '/otp',
+    },
     keywords: [
         'OTP generator',
         'TOTP generator',

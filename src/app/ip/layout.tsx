@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'IP Lookup - Check Your IP Address & Location',
     description: 'Check your public IP address and location. Get detailed information including ISP, country, city, timezone, and more. Free IP lookup tool.',
+    alternates: {
+        canonical: '/ip',
+    },
     keywords: [
         'IP lookup',
         'what is my IP',

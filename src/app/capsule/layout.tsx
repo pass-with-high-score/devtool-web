@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Time Capsule - Send Messages to the Future',
     description: 'Create digital time capsules with encrypted messages. Schedule messages to be revealed at a future date. Perfect for future letters, reminders, and surprise messages.',
+    alternates: {
+        canonical: '/capsule',
+    },
     keywords: [
         'time capsule',
         'future message',

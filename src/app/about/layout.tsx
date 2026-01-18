@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'About - DevTools',
     description: 'Learn about DevTools - a collection of free online developer tools. Our mission is to provide useful, privacy-focused tools for developers.',
+    alternates: {
+        canonical: '/about',
+    },
     keywords: [
         'about devtools',
         'developer tools',
