@@ -4,6 +4,7 @@ import ToolsGrid from '@/components/ToolsGrid';
 import FeaturesSection from '@/components/FeaturesSection';
 import Footer from '@/components/Footer';
 import styles from './page.module.css';
+import { Agentation } from "agentation";
 
 export default function HomePage() {
     return (
@@ -22,6 +23,7 @@ export default function HomePage() {
 
             {/* Footer */}
             <Footer />
+            {process.env.NODE_ENV === "development" && <Agentation />}
         </div>
     );
 }

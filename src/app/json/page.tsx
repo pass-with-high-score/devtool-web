@@ -63,15 +63,45 @@ function getPreview(json: string, maxLength: number = 60): string {
 // Generate code snippets
 function generateSnippets(url: string) {
     return {
-        javascript: `fetch('${url}')
+        javascript: `// GET request
+fetch('${url}')
   .then(res => res.json())
-  .then(data => console.log(data));`,
+  .then(data => console.log(data));
+
+// POST request
+fetch('${url}', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'test' })
+}).then(res => res.json());
+
+// PUT, PATCH, DELETE also supported`,
         python: `import requests
 
+# GET request
 response = requests.get('${url}')
 data = response.json()
-print(data)`,
-        curl: `curl -X GET '${url}'`,
+
+# POST request
+response = requests.post('${url}', json={'name': 'test'})
+
+# PUT, PATCH, DELETE also supported`,
+        curl: `# GET request
+curl -X GET '${url}'
+
+# POST request
+curl -X POST '${url}' \\
+  -H 'Content-Type: application/json' \\
+  -d '{"name": "test"}'
+
+# PUT request
+curl -X PUT '${url}' -d '{}'
+
+# PATCH request
+curl -X PATCH '${url}' -d '{}'
+
+# DELETE request
+curl -X DELETE '${url}'`,
     };
 }
 

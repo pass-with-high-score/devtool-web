@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
-// CORS headers for public JSON access
+// CORS headers for public JSON access - support all methods
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
     'Content-Type': 'application/json',
 };
 
@@ -80,16 +80,11 @@ function jsonPath(obj: unknown, path: string): unknown {
     return current;
 }
 
-export async function OPTIONS() {
-    return new NextResponse(null, {
-        status: 204,
-        headers: corsHeaders,
-    });
-}
-
-export async function GET(
+// Common handler for fetching JSON - used by all methods
+async function handleJsonRequest(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    params: Promise<{ id: string }>,
+    method: string
 ) {
     try {
         const { id } = await params;
@@ -146,12 +141,13 @@ export async function GET(
             }
         }
 
-        // Return JSON content
+        // Return JSON content with method info
         return new NextResponse(content, {
             status: 200,
             headers: {
                 ...corsHeaders,
                 'X-Delay-Applied': delay > 0 ? `${delay}ms` : '0',
+                'X-Request-Method': method,
             },
         });
     } catch (error) {
@@ -161,4 +157,46 @@ export async function GET(
             { status: 500, headers: corsHeaders }
         );
     }
+}
+
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 204,
+        headers: corsHeaders,
+    });
+}
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    return handleJsonRequest(request, params, 'GET');
+}
+
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    return handleJsonRequest(request, params, 'POST');
+}
+
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    return handleJsonRequest(request, params, 'PUT');
+}
+
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    return handleJsonRequest(request, params, 'PATCH');
+}
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    return handleJsonRequest(request, params, 'DELETE');
 }
