@@ -9,6 +9,7 @@ import { ChatModule } from './chat/chat.module';
 import { SpeechModule } from './speech/speech.module';
 import { YouTubeModule } from './youtube/youtube.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { M3u8Module } from './m3u8/m3u8.module';
 
 @Module({
     imports: [
@@ -25,7 +26,7 @@ import { TelegramModule } from './telegram/telegram.module';
         SpeechModule,
         YouTubeModule,
         TelegramModule,
+        M3u8Module,
     ],
 })
 export class AppModule { }
-

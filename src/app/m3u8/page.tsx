@@ -9,6 +9,7 @@ import styles from './page.module.css';
 type DownloadStatus = 'idle' | 'loading' | 'processing' | 'ready' | 'error';
 
 export default function M3U8DownloaderPage() {
+    const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL;
     const [url, setUrl] = useState('');
     const [status, setStatus] = useState<DownloadStatus>('idle');
     const [errorMessage, setErrorMessage] = useState('');
@@ -96,7 +97,11 @@ export default function M3U8DownloaderPage() {
         try {
             setStatus('processing');
 
-            const response = await fetch('/api/m3u8', {
+            if (!API_BASE) {
+                throw new Error('Backend URL not configured. Set NEXT_PUBLIC_CHAT_URL');
+            }
+
+            const response = await fetch(`${API_BASE}/m3u8/convert`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -24,6 +24,7 @@ export class R2Service {
         this.r2Client = new S3Client({
             region: 'auto',
             endpoint: endpoint,
+            forcePathStyle: true,
             credentials: {
                 accessKeyId: accessKeyId || '',
                 secretAccessKey: secretAccessKey || '',
@@ -186,4 +187,3 @@ export class R2Service {
         }
     }
 }
-
