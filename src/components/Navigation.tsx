@@ -45,6 +45,7 @@ const moreTools: NavItem[] = [
     { href: '/speech', label: 'Speech', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg> },
     { href: '/ip', label: 'IP Check', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="10" r="3" /><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z" /></svg> },
     { href: '/transfer', label: 'Transfer', icon: <FileIcon size={18} /> },
+    { href: '/m3u8', label: 'M3U8', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> },
     { href: '/base64', label: 'Base64', icon: <ImageIcon size={18} /> },
     { href: '/capsule', label: 'Capsule', icon: <HourglassIcon size={18} /> },
     { href: '/aneko-builder', label: 'ANeko', icon: <Image src="/aneko.png" alt="ANeko" width={18} height={18} style={{ imageRendering: 'pixelated' }} /> },

@@ -19,11 +19,16 @@ if (!endpoint || !accessKeyId || !secretAccessKey || !bucket) {
 const r2Client = new S3Client({
     region: 'auto',
     endpoint: endpoint,
+    forcePathStyle: true, // Cloudflare R2 works best with path-style
     credentials: {
         accessKeyId: accessKeyId || '',
         secretAccessKey: secretAccessKey || '',
     },
 });
+
+export function isR2Configured(): boolean {
+    return Boolean(endpoint && accessKeyId && secretAccessKey && bucket);
+}
 
 /**
  * Generate a presigned URL for uploading a file to R2
@@ -91,6 +96,9 @@ export async function uploadObject(
     body: Buffer | Uint8Array,
     contentType: string
 ): Promise<void> {
+    if (!isR2Configured()) {
+        throw new Error('R2 storage is not configured. Set S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET, S3_PUBLIC_URL');
+    }
     const command = new PutObjectCommand({
         Bucket: bucket,
         Key: objectKey,

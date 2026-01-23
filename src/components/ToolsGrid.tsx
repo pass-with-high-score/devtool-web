@@ -124,6 +124,13 @@ const tools: Tool[] = [
         icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" /><circle cx="2" cy="20" r="1" fill="currentColor" /></svg>,
         color: 'cyan',
     },
+    {
+        href: '/m3u8',
+        title: 'M3U8 Downloader',
+        description: 'Download HLS/M3U8 video streams. Convert to MP4 with ffmpeg.',
+        icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
+        color: 'green',
+    },
 ];
 
 export default function ToolsGrid() {

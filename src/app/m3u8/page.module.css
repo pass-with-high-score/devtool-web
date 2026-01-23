@@ -1,0 +1,475 @@
+/* M3U8 Downloader Page Styles */
+
+.container {
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    position: relative;
+}
+
+.backgroundGradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 50%, #fdf4ff 100%);
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.logoIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-cyan);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    color: var(--neo-black);
+}
+
+.logo h1 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--neo-black);
+    margin: 0;
+}
+
+.tagline {
+    font-size: 1rem;
+    color: #475569;
+    margin: 0;
+}
+
+/* Main */
+.main {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Input Section */
+.inputSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.inputHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.inputBody {
+    padding: 1.5rem;
+}
+
+.inputWrapper {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.urlInput {
+    flex: 1;
+    padding: 1rem;
+    font-size: 1rem;
+    font-family: 'Roboto Mono', monospace;
+    border: 3px solid var(--neo-black);
+    background: #f8fafc;
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.urlInput:focus {
+    background: var(--neo-yellow);
+    box-shadow: 4px 4px 0 var(--neo-black);
+}
+
+.urlInput::placeholder {
+    color: #94a3b8;
+}
+
+.downloadButton {
+    padding: 1rem 2rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.downloadButton:hover:not(:disabled) {
+    background: var(--neo-green);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    transform: translate(-2px, -2px);
+}
+
+.downloadButton:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+.downloadButton:disabled {
+    background: #e2e8f0;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.inputHint {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.inputHint code {
+    background: #e2e8f0;
+    padding: 0.2rem 0.4rem;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.8rem;
+    border: 1px solid #cbd5e1;
+}
+
+/* Progress Section */
+.progressSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.progressHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.progressHeader h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.cancelButton {
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.cancelButton:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+.progressBody {
+    padding: 1.5rem;
+}
+
+.progressBarContainer {
+    height: 16px;
+    background: #e2e8f0;
+    border: 3px solid var(--neo-black);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.progressBar {
+    height: 100%;
+    background: var(--neo-cyan);
+    transition: width 0.3s ease;
+}
+
+.progressBar.indeterminate {
+    width: 30%;
+    animation: indeterminate 1.5s infinite ease-in-out;
+}
+
+@keyframes indeterminate {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(400%);
+    }
+}
+
+.progressInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progressStatus {
+    font-size: 0.9rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+.progressPercent {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--neo-black);
+}
+
+/* Preview Section */
+.previewSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.previewHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: var(--neo-black);
+    color: var(--neo-white);
+}
+
+.previewHeader h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.closeButton {
+    padding: 0.4rem 0.75rem;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.closeButton:hover {
+    background: var(--neo-red);
+    color: var(--neo-white);
+}
+
+.videoContainer {
+    position: relative;
+    background: #000;
+    aspect-ratio: 16/9;
+    width: 100%;
+}
+
+.videoElement {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.previewActions {
+    padding: 1rem 1.25rem;
+    background: #f8fafc;
+    border-top: 3px solid var(--neo-black);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.actionButton {
+    padding: 0.75rem 1.5rem;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.actionButton:hover {
+    box-shadow: 4px 4px 0 var(--neo-black);
+    transform: translate(-2px, -2px);
+}
+
+.actionButton:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+.actionButton.secondary {
+    background: var(--neo-yellow);
+}
+
+/* Error Message */
+.errorMessage {
+    padding: 1rem 1.25rem;
+    background: var(--neo-red);
+    border: 3px solid var(--neo-black);
+    color: var(--neo-white);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Features */
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .inputWrapper {
+        flex-direction: column;
+    }
+
+    .downloadButton {
+        justify-content: center;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .previewActions {
+        flex-direction: column;
+    }
+
+    .actionButton {
+        justify-content: center;
+    }
+}
+
+.feature {
+    padding: 1.5rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    text-align: center;
+}
+
+.featureIcon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+}
+
+.feature h4 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+}
+
+.feature p {
+    font-size: 0.8rem;
+    color: #475569;
+    margin: 0;
+}
+
+/* Spinner */
+.spinner {
+    width: 18px;
+    height: 18px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Format selector */
+.formatSelector {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.formatOption {
+    padding: 0.5rem 1rem;
+    background: #f1f5f9;
+    border: 2px solid var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.formatOption:hover {
+    background: #e2e8f0;
+}
+
+.formatOption.active {
+    background: var(--neo-cyan);
+    box-shadow: 2px 2px 0 var(--neo-black);
+}

@@ -120,6 +120,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'monthly',
             priority: 0.8,
         },
+        {
+            url: `${baseUrl}/m3u8`,
+            lastModified,
+            changeFrequency: 'monthly',
+            priority: 0.8,
+        },
     ];
 }
 
