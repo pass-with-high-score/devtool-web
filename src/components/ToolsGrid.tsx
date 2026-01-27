@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon } from '@/components/Icons';
 import styles from '../app/page.module.css';
 
 interface Tool {
@@ -13,11 +13,18 @@ interface Tool {
 
 const tools: Tool[] = [
     {
+        href: '/markdown',
+        title: 'Markdown Editor',
+        description: 'Create and edit markdown with live preview. Export to HTML or download as .md file.',
+        icon: <MarkdownIcon size={32} />,
+        color: 'green',
+    },
+    {
         href: '/check-subdomain',
         title: 'Subdomain Scanner',
         description: 'Discover subdomains using Certificate Transparency logs, resolve DNS, and detect Cloudflare protection.',
         icon: <SearchIcon size={32} />,
-        color: 'green',
+        color: 'cyan',
     },
     {
         href: '/ip',

@@ -1,0 +1,425 @@
+/* Markdown Editor Page - Neo-Brutalism Style */
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.container.fullscreen {
+    padding: 10px;
+}
+
+.container.fullscreen .header {
+    display: none;
+}
+
+.container.fullscreen .main {
+    max-width: 100%;
+}
+
+.backgroundGradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--neo-green) 0%, var(--neo-cyan) 50%, var(--neo-yellow) 100%);
+    opacity: 0.15;
+    z-index: -1;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin: 80px 0 30px;
+    z-index: 10;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.logoIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: var(--neo-green);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+}
+
+.logo h1 {
+    font-size: 36px;
+    text-transform: uppercase;
+}
+
+.tagline {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Main */
+.main {
+    width: 100%;
+    max-width: 1200px;
+    z-index: 10;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 4px 4px 0 var(--neo-black);
+    padding: 12px 16px;
+}
+
+.toolbarLeft,
+.toolbarRight {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.toolButton {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0 var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.toolButton:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--neo-black);
+}
+
+.toolButton:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--neo-black);
+}
+
+.fileNameInput {
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: var(--neo-yellow);
+    border: 3px solid var(--neo-black);
+    box-shadow: 2px 2px 0 var(--neo-black);
+    min-width: 150px;
+}
+
+/* Format Bar */
+.formatBar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0 var(--neo-black);
+    flex-wrap: wrap;
+}
+
+.formatButton {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    width: 32px;
+    height: 32px;
+    background: var(--neo-white);
+    color: var(--neo-black);
+    border: 2px solid var(--neo-black);
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.formatButton:hover {
+    background: var(--neo-cyan);
+}
+
+.separator {
+    width: 1px;
+    height: 24px;
+    background: var(--neo-black);
+    margin: 0 8px;
+}
+
+/* Editor Wrapper */
+.editorWrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    min-height: 500px;
+}
+
+.editorPanel,
+.previewPanel {
+    display: flex;
+    flex-direction: column;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0 var(--neo-black);
+}
+
+.panelHeader {
+    padding: 10px 16px;
+    background: var(--neo-green);
+    border-bottom: 3px solid var(--neo-black);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.previewPanel .panelHeader {
+    background: var(--neo-cyan);
+}
+
+.editor {
+    flex: 1;
+    width: 100%;
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    background: #fafafa;
+    color: #1a1a2e;
+    border: none;
+    resize: none;
+    outline: none;
+}
+
+.editor::placeholder {
+    color: #888;
+}
+
+.preview {
+    flex: 1;
+    width: 100%;
+    padding: 16px;
+    overflow-y: auto;
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--neo-black);
+}
+
+/* Preview Styles */
+.preview h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+    border-bottom: 2px solid var(--neo-black);
+    padding-bottom: 0.3em;
+}
+
+.preview h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+    border-bottom: 1px solid var(--neo-black);
+    padding-bottom: 0.3em;
+}
+
+.preview h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+}
+
+.preview p {
+    margin: 1em 0;
+}
+
+.preview code {
+    background: var(--neo-yellow);
+    padding: 2px 6px;
+    border: 2px solid var(--neo-black);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9em;
+}
+
+.preview pre {
+    background: #2d2d2d;
+    padding: 16px;
+    overflow-x: auto;
+    border: 3px solid var(--neo-black);
+    margin: 1em 0;
+}
+
+.preview pre code {
+    background: none;
+    padding: 0;
+    border: none;
+    color: #f8f8f2;
+}
+
+.preview blockquote {
+    border-left: 4px solid var(--neo-cyan);
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.preview ul,
+.preview ol {
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+.preview li {
+    margin: 0.5em 0;
+}
+
+.preview li.task {
+    list-style: none;
+    margin-left: -1.5em;
+}
+
+.preview li.task::before {
+    content: '☐ ';
+    font-size: 1.1em;
+}
+
+.preview li.task.done::before {
+    content: '☑ ';
+    color: var(--neo-green);
+}
+
+.preview a {
+    color: var(--neo-cyan);
+    text-decoration: underline;
+}
+
+.preview a:hover {
+    color: var(--neo-pink);
+}
+
+.preview img {
+    max-width: 100%;
+    height: auto;
+    border: 3px solid var(--neo-black);
+}
+
+.preview hr {
+    border: none;
+    border-top: 4px solid var(--neo-black);
+    margin: 2em 0;
+}
+
+.preview strong {
+    font-weight: 700;
+}
+
+.preview em {
+    font-style: italic;
+}
+
+.preview del {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+/* Stats */
+.stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 3px 3px 0 var(--neo-black);
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.stats span {
+    font-family: 'Consolas', monospace;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .editorWrapper {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .editorPanel,
+    .previewPanel {
+        min-height: 400px;
+    }
+
+    .header {
+        margin: 60px 0 20px;
+    }
+
+    .logo h1 {
+        font-size: 28px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbarLeft,
+    .toolbarRight {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .fileNameInput {
+        min-width: 100%;
+    }
+
+    .formatBar {
+        justify-content: center;
+    }
+
+    .separator {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .toolButton span {
+        display: none;
+    }
+
+    .stats {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+}

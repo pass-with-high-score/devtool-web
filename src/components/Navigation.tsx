@@ -18,6 +18,7 @@ import {
     FileIcon,
     YouTubeIcon,
     PlayIcon,
+    MarkdownIcon,
 } from './Icons';
 import styles from './Navigation.module.css';
 
@@ -38,6 +39,7 @@ const coreTools: NavItem[] = [
 
 // More tools - in dropdown on desktop, visible on mobile menu
 const moreTools: NavItem[] = [
+    { href: '/markdown', label: 'Markdown', icon: <MarkdownIcon size={18} /> },
     { href: '/youtube', label: 'YouTube', icon: <YouTubeIcon size={18} /> },
     { href: '/video', label: 'Video', icon: <PlayIcon size={18} /> },
     { href: '/audio', label: 'Audio', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg> },

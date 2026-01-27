@@ -688,3 +688,14 @@ export function SwitchIcon({ className, size = 24, ...props }: IconProps) {
         </svg>
     );
 }
+
+export function MarkdownIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="M5 15V9l3 4 3-4v6" />
+            <path d="M15 12l3 3 3-3m-3 3V9" />
+        </svg>
+    );
+}
+
