@@ -20,6 +20,7 @@ import {
     PlayIcon,
     MarkdownIcon,
     QRCodeIcon,
+    ScanTextIcon,
 } from './Icons';
 import styles from './Navigation.module.css';
 
@@ -40,6 +41,7 @@ const coreTools: NavItem[] = [
 
 // More tools - in dropdown on desktop, visible on mobile menu
 const moreTools: NavItem[] = [
+    { href: '/ocr', label: 'OCR', icon: <ScanTextIcon size={18} /> },
     { href: '/qrcode', label: 'QR Code', icon: <QRCodeIcon size={18} /> },
     { href: '/markdown', label: 'Markdown', icon: <MarkdownIcon size={18} /> },
     { href: '/youtube', label: 'YouTube', icon: <YouTubeIcon size={18} /> },

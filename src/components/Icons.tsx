@@ -713,4 +713,18 @@ export function QRCodeIcon({ className, size = 24, ...props }: IconProps) {
     );
 }
 
+export function ScanTextIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M4 7V4h3" />
+            <path d="M4 17v3h3" />
+            <path d="M20 7V4h-3" />
+            <path d="M20 17v3h-3" />
+            <path d="M7 9h10" />
+            <path d="M7 12h10" />
+            <path d="M7 15h6" />
+        </svg>
+    );
+}
+
 

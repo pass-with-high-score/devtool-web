@@ -1,0 +1,437 @@
+.container {
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+    background: var(--bg-primary);
+}
+
+.backgroundGradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 0, 0, 0.03) 40px,
+            rgba(0, 0, 0, 0.03) 41px),
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 0, 0, 0.03) 40px,
+            rgba(0, 0, 0, 0.03) 41px);
+    z-index: -2;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.logoIcon {
+    font-size: 2.5rem;
+    display: inline-block;
+    padding: 0.5rem;
+    background: var(--neo-yellow);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.logo h1 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--neo-black);
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    text-shadow: 4px 4px 0px var(--neo-yellow);
+}
+
+.tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Main Grid Layout */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Options Section */
+.optionsSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+}
+
+.optionsSection h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 1rem;
+}
+
+.languageSelect {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 3px solid var(--neo-black);
+    background: var(--bg-primary);
+    color: var(--neo-black);
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.languageSelect:focus {
+    outline: none;
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.reprocessButton {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--neo-cyan);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.reprocessButton:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.reprocessButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Upload Zone */
+.uploadZone {
+    background: var(--neo-white);
+    border: 4px dashed var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uploadZone:hover {
+    background: var(--bg-primary);
+}
+
+.uploadZone.dragOver {
+    background: var(--neo-yellow);
+    border-style: solid;
+}
+
+.uploadZone.hasImage {
+    border-style: solid;
+    padding: 1rem;
+}
+
+.fileInput {
+    display: none;
+}
+
+.uploadPlaceholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.uploadPlaceholder p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--neo-black);
+}
+
+.uploadHint {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.previewContainer {
+    position: relative;
+    width: 100%;
+}
+
+.previewImage {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border: 2px solid var(--neo-black);
+}
+
+.clearButton {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--neo-pink);
+    border: 2px solid var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.clearButton:hover {
+    transform: scale(1.05);
+}
+
+/* Progress */
+.progressSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+}
+
+.progressBar {
+    height: 20px;
+    background: var(--bg-primary);
+    border: 2px solid var(--neo-black);
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: var(--neo-yellow);
+    transition: width 0.3s;
+}
+
+.progressText {
+    display: block;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* Features Section */
+.featuresSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+}
+
+.featuresSection h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 1rem;
+}
+
+.featuresList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.featureItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--neo-black);
+}
+
+.featureIcon {
+    color: var(--neo-green);
+    flex-shrink: 0;
+}
+
+.featureItem span {
+    font-size: 0.95rem;
+    color: var(--neo-black);
+}
+
+/* Result Section */
+.resultSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+}
+
+.resultHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.resultHeader h3 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+}
+
+.copyButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.copyButton:hover:not(:disabled) {
+    background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.copyButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.resultText {
+    flex: 1;
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    line-height: 1.6;
+    border: 3px solid var(--neo-black);
+    background: var(--bg-primary);
+    color: var(--neo-black);
+    resize: none;
+    outline: none;
+}
+
+.resultText:focus {
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.emptyPlaceholder,
+.loadingPlaceholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: var(--text-muted);
+}
+
+.emptyPlaceholder p,
+.loadingPlaceholder p {
+    font-size: 1rem;
+    max-width: 250px;
+    text-align: center;
+}
+
+/* Spinner */
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--neo-black);
+    border-top-color: var(--neo-yellow);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .mainGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .resultSection {
+        min-height: 400px;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .logo h1 {
+        font-size: 1.75rem;
+    }
+
+    .logoIcon {
+        padding: 0.4rem;
+    }
+
+    .uploadZone {
+        min-height: 200px;
+    }
+}
