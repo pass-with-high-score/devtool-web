@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon, QRCodeIcon, ScanTextIcon, ColorPickerIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon, QRCodeIcon, ScanTextIcon, ColorPickerIcon, ScanIcon } from '@/components/Icons';
 import styles from '../app/page.module.css';
 
 interface Tool {
@@ -18,6 +18,13 @@ const tools: Tool[] = [
         description: 'Create custom QR codes from text or URLs. Download as PNG or SVG with color options.',
         icon: <QRCodeIcon size={32} />,
         color: 'green',
+    },
+    {
+        href: '/qr-scanner',
+        title: 'QR Scanner',
+        description: 'Scan QR codes from camera or upload images. Real-time camera scanning with history.',
+        icon: <ScanIcon size={32} />,
+        color: 'orange',
     },
     {
         href: '/ocr',

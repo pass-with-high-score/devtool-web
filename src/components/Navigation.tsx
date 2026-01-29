@@ -22,6 +22,7 @@ import {
     QRCodeIcon,
     ScanTextIcon,
     ColorPickerIcon,
+    ScanIcon,
 } from './Icons';
 import styles from './Navigation.module.css';
 
@@ -45,6 +46,7 @@ const moreTools: NavItem[] = [
     { href: '/ocr', label: 'OCR', icon: <ScanTextIcon size={18} /> },
     { href: '/color-picker', label: 'Color Picker', icon: <ColorPickerIcon size={18} /> },
     { href: '/qrcode', label: 'QR Code', icon: <QRCodeIcon size={18} /> },
+    { href: '/qr-scanner', label: 'QR Scan', icon: <ScanIcon size={18} /> },
     { href: '/markdown', label: 'Markdown', icon: <MarkdownIcon size={18} /> },
     { href: '/youtube', label: 'YouTube', icon: <YouTubeIcon size={18} /> },
     { href: '/video', label: 'Video', icon: <PlayIcon size={18} /> },
