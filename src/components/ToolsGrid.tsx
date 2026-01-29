@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon, QRCodeIcon, ScanTextIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon, QRCodeIcon, ScanTextIcon, ColorPickerIcon } from '@/components/Icons';
 import styles from '../app/page.module.css';
 
 interface Tool {
@@ -25,6 +25,13 @@ const tools: Tool[] = [
         description: 'Extract text from images using AI-powered OCR. Supports multiple languages.',
         icon: <ScanTextIcon size={32} />,
         color: 'yellow',
+    },
+    {
+        href: '/color-picker',
+        title: 'Color Picker',
+        description: 'Pick colors from any image. Get HEX, RGB, HSL values with magnifier preview.',
+        icon: <ColorPickerIcon size={32} />,
+        color: 'cyan',
     },
     {
         href: '/markdown',

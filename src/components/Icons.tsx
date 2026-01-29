@@ -727,4 +727,40 @@ export function ScanTextIcon({ className, size = 24, ...props }: IconProps) {
     );
 }
 
+export function ColorPickerIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M2 22l1-1h3l9-9" />
+            <path d="M3 21v-3l9-9" />
+            <path d="M14.5 5.5L18.5 9.5" />
+            <path d="M18.37 3.63a2.12 2.12 0 1 1 3 3L16 12l-4 1 1-4 5.37-5.37z" />
+        </svg>
+    );
+}
+
+export function PaletteIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <circle cx="13.5" cy="6.5" r="2" />
+            <circle cx="17.5" cy="10.5" r="2" />
+            <circle cx="8.5" cy="7.5" r="2" />
+            <circle cx="6.5" cy="12.5" r="2" />
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z" />
+        </svg>
+    );
+}
+
+export function EyeDropperIcon({ className, size = 24, ...props }: IconProps) {
+    return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M2 22 12 12" />
+            <path d="M6.3 17.7a2.83 2.83 0 0 0 4 4l8-8a2.83 2.83 0 1 0-4-4l-8 8Z" />
+            <path d="m8.5 8.5 7 7" />
+            <path d="M17 2h.01" />
+            <path d="M20 5.01 17 8" />
+            <path d="M22 7h.01" />
+        </svg>
+    );
+}
+
 
