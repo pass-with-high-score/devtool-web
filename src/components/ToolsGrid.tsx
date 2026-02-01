@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon, QRCodeIcon, ScanTextIcon, ColorPickerIcon, ScanIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon, QRCodeIcon, ScanTextIcon, ColorPickerIcon, ScanIcon, BankIcon } from '@/components/Icons';
 import styles from '../app/page.module.css';
 
 interface Tool {
@@ -25,6 +25,13 @@ const tools: Tool[] = [
         description: 'Scan QR codes from camera or upload images. Real-time camera scanning with history.',
         icon: <ScanIcon size={32} />,
         color: 'orange',
+    },
+    {
+        href: '/vietqr',
+        title: 'VietQR Generator',
+        description: 'Tạo mã QR thanh toán VietQR và hình nền wallpaper cho ngân hàng Việt Nam.',
+        icon: <BankIcon size={32} />,
+        color: 'yellow',
     },
     {
         href: '/ocr',
