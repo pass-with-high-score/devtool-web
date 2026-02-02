@@ -7,7 +7,7 @@ import { sql, initDatabase } from '@/lib/db';
 import { uploadObject, getPublicUrl } from '@/lib/r2';
 import { randomUUID } from 'crypto';
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
 // Expiration options in hours
 const EXPIRATION_OPTIONS: Record<string, number> = {
