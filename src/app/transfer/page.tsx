@@ -31,8 +31,8 @@ export default function TransferPage() {
     const { toasts, addToast, removeToast } = useToast();
 
     const uploadFile = async (file: File) => {
-        if (file.size > 100 * 1024 * 1024) {
-            addToast('File too large. Maximum 100MB', 'error');
+        if (file.size > 1024 * 1024 * 1024) {
+            addToast('File too large. Maximum 1GB', 'error');
             return;
         }
 
@@ -195,7 +195,7 @@ export default function TransferPage() {
                                         <UploadIcon size={48} />
                                     </div>
                                     <p className={styles.uploadText}>Drop file here or click to upload</p>
-                                    <p className={styles.uploadLimit}>Max 100MB • Any file type</p>
+                                    <p className={styles.uploadLimit}>Max 1GB • Any file type</p>
                                 </div>
                             )}
                         </div>
@@ -244,7 +244,7 @@ export default function TransferPage() {
                             <UploadIcon size={24} />
                         </div>
                         <h4>Any File Type</h4>
-                        <p>Upload documents, videos, archives - anything up to 100MB</p>
+                        <p>Upload documents, videos, archives - anything up to 1GB</p>
                     </div>
                     <div className={styles.feature}>
                         <div className={styles.featureIcon}>
