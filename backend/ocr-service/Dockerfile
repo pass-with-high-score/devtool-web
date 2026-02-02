@@ -20,13 +20,14 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-download only the most essential models (en, vi)
-# Other models will be downloaded on-demand
-RUN python -c "from paddleocr import PaddleOCR; PaddleOCR(use_angle_cls=True, lang='en', use_gpu=False, show_log=False)"
-RUN python -c "from paddleocr import PaddleOCR; PaddleOCR(use_angle_cls=True, lang='vi', use_gpu=False, show_log=False)"
+# NOTE: Models will be downloaded on first use at runtime
+# This avoids segfault during Docker build on low-RAM systems
 
 # Copy application code
 COPY main.py .
+
+# Create directory for model cache
+RUN mkdir -p /root/.paddleocr
 
 # Expose port
 EXPOSE 8080
