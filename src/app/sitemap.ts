@@ -79,6 +79,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.8,
         },
         {
+            url: `${baseUrl}/json-viewer`,
+            lastModified,
+            changeFrequency: 'monthly',
+            priority: 0.8,
+        },
+        {
             url: `${baseUrl}/capsule`,
             lastModified,
             changeFrequency: 'monthly',

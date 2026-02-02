@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon, QRCodeIcon, ScanTextIcon, ColorPickerIcon, ScanIcon } from '@/components/Icons';
+import { SearchIcon, KeyIcon, ImageIcon, LinkIcon, CodeIcon, HourglassIcon, UploadIcon, FileIcon, MarkdownIcon, QRCodeIcon, ScanTextIcon, ColorPickerIcon, ScanIcon, JSONViewerIcon } from '@/components/Icons';
 import styles from '../app/page.module.css';
 
 interface Tool {
@@ -46,6 +46,13 @@ const tools: Tool[] = [
         description: 'Create and edit markdown with live preview. Export to HTML or download as .md file.',
         icon: <MarkdownIcon size={32} />,
         color: 'cyan',
+    },
+    {
+        href: '/json-viewer',
+        title: 'JSON Viewer',
+        description: 'View, format, and explore JSON with tree view, path navigation, and search.',
+        icon: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1" /><path d="M16 3h1a2 2 0 0 1 2 2v5a2 2 0 0 0 2 2 2 2 0 0 0-2 2v5a2 2 0 0 1-2 2h-1" /></svg>,
+        color: 'yellow',
     },
     {
         href: '/check-subdomain',
@@ -95,6 +102,13 @@ const tools: Tool[] = [
         description: 'Host, validate, and share JSON data. Create mock APIs with persistent storage.',
         icon: <CodeIcon size={32} />,
         color: 'orange',
+    },
+    {
+        href: '/json-viewer',
+        title: 'JSON Viewer',
+        description: 'View, format, and explore JSON data with tree view, syntax highlighting, and path navigation.',
+        icon: <JSONViewerIcon size={32} />,
+        color: 'green',
     },
     {
         href: '/upload',
