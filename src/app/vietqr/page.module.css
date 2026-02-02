@@ -1,0 +1,531 @@
+.container {
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+    background: var(--bg-primary);
+}
+
+.backgroundGradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 0, 0, 0.03) 40px,
+            rgba(0, 0, 0, 0.03) 41px),
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 0, 0, 0.03) 40px,
+            rgba(0, 0, 0, 0.03) 41px);
+    z-index: -2;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.logoIcon {
+    font-size: 2.5rem;
+    display: inline-block;
+    padding: 0.5rem;
+    background: var(--neo-orange);
+    border: 4px solid var(--neo-black);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.logo h1 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--neo-black);
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    text-shadow: 4px 4px 0px var(--neo-orange);
+}
+
+.tagline {
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tabButton {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    background: var(--neo-white);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.tabButton:hover {
+    background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.tabButton.active {
+    background: var(--neo-orange);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+/* Main Grid Layout */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Form Section */
+.formSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+}
+
+.formSection h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 1.5rem;
+}
+
+.formGroup {
+    margin-bottom: 1.25rem;
+}
+
+.formGroup:last-child {
+    margin-bottom: 0;
+}
+
+.formGroup label {
+    display: block;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 0.5rem;
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 3px solid var(--neo-black);
+    background: var(--bg-primary);
+    color: var(--neo-black);
+    outline: none;
+    font-family: inherit;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.formGroup select {
+    cursor: pointer;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.templateSelect {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.templateOption {
+    padding: 0.75rem 0.5rem;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.templateOption:hover {
+    background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+.templateOption.active {
+    background: var(--neo-orange);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+/* Preview Section */
+.previewSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.previewSection h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 1.5rem;
+}
+
+.qrPreview {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    border: 3px solid var(--neo-black);
+    padding: 2rem;
+    min-height: 300px;
+}
+
+.qrContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    width: 280px;
+    height: 280px;
+}
+
+.qrImage {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.qrCanvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.qrPlaceholder {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.qrPlaceholder svg {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.qrPlaceholder p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.actionButton {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.75rem 1rem;
+    background: var(--neo-green);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.actionButton:hover:not(:disabled) {
+    background: var(--neo-yellow);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+.actionButton:active:not(:disabled) {
+    transform: translate(0, 0);
+    box-shadow: none;
+}
+
+.actionButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.actionButton.secondary {
+    background: var(--neo-cyan);
+}
+
+/* Import Section */
+.importSection {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+}
+
+.importSection h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 1.5rem;
+}
+
+.dropzone {
+    border: 4px dashed var(--neo-black);
+    border-radius: 0;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--bg-primary);
+}
+
+.dropzone:hover {
+    background: var(--neo-yellow);
+}
+
+.dropzone.active {
+    background: var(--neo-green);
+    border-style: solid;
+}
+
+.dropzoneContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dropzoneContent svg {
+    color: var(--neo-black);
+}
+
+.dropzoneContent p {
+    color: var(--neo-black);
+    font-weight: 500;
+}
+
+.dropzoneContent span {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.importedImageContainer {
+    text-align: center;
+}
+
+.importedImage {
+    max-width: 100%;
+    max-height: 300px;
+    border: 4px solid var(--neo-black);
+}
+
+.removeButton {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--neo-pink);
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+    color: var(--neo-black);
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.removeButton:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--neo-black);
+}
+
+/* Wallpaper Section */
+.wallpaperSection {
+    max-width: 1200px;
+    margin: 2rem auto 0;
+}
+
+.wallpaperCard {
+    background: var(--neo-white);
+    border: 4px solid var(--neo-black);
+    box-shadow: 8px 8px 0px var(--neo-black);
+    padding: 1.5rem;
+}
+
+.wallpaperCard h2 {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--neo-black);
+    margin-bottom: 1.5rem;
+}
+
+.wallpaperControls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.canvasContainer {
+    background: var(--bg-primary);
+    border: 4px solid var(--neo-black);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    margin-bottom: 1.5rem;
+}
+
+.wallpaperCanvas {
+    max-width: 100%;
+    max-height: 500px;
+    border: 3px solid var(--neo-black);
+    box-shadow: 4px 4px 0px var(--neo-black);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .mainGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+
+    .wallpaperControls {
+        grid-template-columns: 1fr;
+    }
+
+    .templateSelect {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tabs {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .logo h1 {
+        font-size: 1.75rem;
+    }
+
+    .logoIcon {
+        padding: 0.4rem;
+    }
+
+    .actionButtons {
+        flex-direction: column;
+    }
+
+    .actionButton {
+        width: 100%;
+    }
+
+    .qrContainer {
+        width: 240px;
+        height: 240px;
+    }
+
+    .qrPreview {
+        min-height: 260px;
+        padding: 1rem;
+    }
+}
