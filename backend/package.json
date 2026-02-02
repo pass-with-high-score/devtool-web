@@ -27,14 +27,13 @@
         "@nestjs/schedule": "^4.0.0",
         "@nestjs/websockets": "^10.0.0",
         "axios": "^1.13.2",
+        "form-data": "^4.0.5",
         "postgres": "^3.4.5",
         "proxifly": "^2.0.4",
         "reflect-metadata": "^0.1.13",
         "rxjs": "^7.8.1",
-        "sharp": "^0.34.5",
         "socket.io": "^4.7.0",
         "socks-proxy-agent": "^8.0.5",
-        "tesseract.js": "^7.0.0",
         "yt-dlp-exec": "^1.0.2"
     },
     "devDependencies": {

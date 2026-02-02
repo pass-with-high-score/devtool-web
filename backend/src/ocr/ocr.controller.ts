@@ -57,6 +57,6 @@ export class OcrController {
             throw new BadRequestException('Empty image data');
         }
 
-        return this.ocrService.recognizeText(file.buffer, language || 'eng');
+        return this.ocrService.recognizeText(file.buffer, language || 'eng', file.originalname);
     }
 }

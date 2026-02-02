@@ -32,11 +32,15 @@ services:
       - TELEGRAM_AUTHORIZED_USER_ID=${TELEGRAM_AUTHORIZED_USER_ID}
       # YouTube Cookies Path (writable location)
       - YOUTUBE_COOKIES_PATH=/app/data/youtube-cookies.txt
+      # OCR Service URL
+      - OCR_SERVICE_URL=http://ocr:8080
     volumes:
       # Mount data directory for cookies (with proper permissions)
       - youtube-data:/app/data
     command: >
       sh -c "mkdir -p /app/data && chmod 777 /app/data && node dist/main"
+    depends_on:
+      - ocr
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3010" ]
@@ -44,6 +48,32 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  # ================================
+  # OCR - PaddleOCR Service
+  # ================================
+  ocr:
+    build:
+      context: ./backend/ocr-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Resource limits for 2GB RAM VPS
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
 # Named volumes for persistent data
 volumes:
