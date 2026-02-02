@@ -129,8 +129,29 @@ export async function initDatabase() {
       expires_at TIMESTAMPTZ NOT NULL,
       max_downloads INTEGER,
       download_count INTEGER DEFAULT 0,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      status VARCHAR(20) DEFAULT 'active',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
     )
+  `;
+
+  // Add status column if it doesn't exist (migration)
+  await sql`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'file_transfers' AND column_name = 'status'
+      ) THEN
+        ALTER TABLE file_transfers ADD COLUMN status VARCHAR(20) DEFAULT 'active';
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'file_transfers' AND column_name = 'updated_at'
+      ) THEN
+        ALTER TABLE file_transfers ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+      END IF;
+    END $$;
   `;
 
   await sql`

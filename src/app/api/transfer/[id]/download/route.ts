@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         const { id } = await params;
 
         const transfers = await sql`
-            SELECT id, object_key, filename, expires_at, max_downloads, download_count
+            SELECT id, object_key, filename, expires_at, max_downloads, download_count, status
             FROM file_transfers
             WHERE id = ${id}::uuid
         `;
@@ -29,6 +29,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         }
 
         const transfer = transfers[0];
+
+        // Check if upload is still pending
+        if (transfer.status === 'pending') {
+            return NextResponse.json(
+                { error: 'Upload is still in progress' },
+                { status: 404 }
+            );
+        }
 
         // Check if expired
         if (new Date(transfer.expires_at) < new Date()) {

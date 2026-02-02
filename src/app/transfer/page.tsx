@@ -24,6 +24,7 @@ interface TransferResult {
 export default function TransferPage() {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadStatus, setUploadStatus] = useState('');
     const [dragOver, setDragOver] = useState(false);
     const [expiresIn, setExpiresIn] = useState('24h');
     const [result, setResult] = useState<TransferResult | null>(null);
@@ -38,40 +39,90 @@ export default function TransferPage() {
 
         setIsUploading(true);
         setUploadProgress(0);
+        setUploadStatus('Preparing upload...');
         setResult(null);
 
         try {
-            // Simulate progress for better UX
-            const progressInterval = setInterval(() => {
-                setUploadProgress(prev => Math.min(prev + 10, 90));
-            }, 200);
-
-            const response = await fetch('/api/transfer', {
+            // Step 1: Get presigned URL
+            setUploadStatus('Getting upload URL...');
+            const presignResponse = await fetch('/api/transfer/presign', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': file.type || 'application/octet-stream',
-                    'x-filename': encodeURIComponent(file.name),
-                    'x-expires': expiresIn,
-                },
-                body: file,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    filename: file.name,
+                    contentType: file.type || 'application/octet-stream',
+                    fileSize: file.size,
+                    expiresIn,
+                }),
             });
 
-            clearInterval(progressInterval);
-            setUploadProgress(100);
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'Upload failed');
+            if (!presignResponse.ok) {
+                const data = await presignResponse.json();
+                throw new Error(data.error || 'Failed to get upload URL');
             }
 
-            const data = await response.json();
+            const { id, uploadUrl } = await presignResponse.json();
+            setUploadProgress(5);
+
+            // Step 2: Upload directly to R2 using presigned URL with progress
+            setUploadStatus('Uploading to storage...');
+            await uploadWithProgress(uploadUrl, file, (progress) => {
+                setUploadProgress(5 + Math.round(progress * 85)); // 5-90%
+            });
+
+            setUploadProgress(90);
+
+            // Step 3: Confirm upload
+            setUploadStatus('Finalizing...');
+            const confirmResponse = await fetch('/api/transfer/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id }),
+            });
+
+            if (!confirmResponse.ok) {
+                const data = await confirmResponse.json();
+                throw new Error(data.error || 'Failed to confirm upload');
+            }
+
+            const data = await confirmResponse.json();
+            setUploadProgress(100);
             setResult(data);
             addToast('File uploaded successfully!', 'success');
         } catch (error) {
             addToast(error instanceof Error ? error.message : 'Upload failed', 'error');
         } finally {
             setIsUploading(false);
+            setUploadStatus('');
         }
+    };
+
+    // Upload with XMLHttpRequest for progress tracking
+    const uploadWithProgress = (url: string, file: File, onProgress: (progress: number) => void): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    onProgress(e.loaded / e.total);
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve();
+                } else {
+                    reject(new Error(`Upload failed with status ${xhr.status}`));
+                }
+            });
+
+            xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+            xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
+
+            xhr.open('PUT', url);
+            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+            xhr.send(file);
+        });
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,7 +163,8 @@ export default function TransferPage() {
     const formatSize = (bytes: number) => {
         if (bytes < 1024) return `${bytes} B`;
         if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
     };
 
     const formatExpiry = (dateStr: string) => {
@@ -187,7 +239,7 @@ export default function TransferPage() {
                                             style={{ width: `${uploadProgress}%` }}
                                         ></div>
                                     </div>
-                                    <p>Uploading... {uploadProgress}%</p>
+                                    <p>{uploadStatus || `Uploading... ${uploadProgress}%`}</p>
                                 </div>
                             ) : (
                                 <div className={styles.uploadPrompt}>
