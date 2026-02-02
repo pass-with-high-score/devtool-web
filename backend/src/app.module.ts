@@ -10,6 +10,7 @@ import { SpeechModule } from './speech/speech.module';
 import { YouTubeModule } from './youtube/youtube.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { M3u8Module } from './m3u8/m3u8.module';
+import { OcrModule } from './ocr/ocr.module';
 
 @Module({
     imports: [
@@ -27,6 +28,7 @@ import { M3u8Module } from './m3u8/m3u8.module';
         YouTubeModule,
         TelegramModule,
         M3u8Module,
+        OcrModule,
     ],
 })
 export class AppModule { }

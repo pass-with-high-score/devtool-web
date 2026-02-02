@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { createWorker, Worker } from 'tesseract.js';
 import Navigation from '@/components/Navigation';
 import Toast, { useToast } from '@/components/Toast';
 import { ScanTextIcon, UploadIcon, CopyIcon, CheckIcon, TrashIcon } from '@/components/Icons';
 import styles from './page.module.css';
+
+const API_BASE = process.env.NEXT_PUBLIC_CHAT_URL;
 
 const LANGUAGES = [
     { code: 'eng', label: 'English' },
@@ -13,67 +14,56 @@ const LANGUAGES = [
     { code: 'jpn', label: '日本語' },
     { code: 'kor', label: '한국어' },
     { code: 'chi_sim', label: '中文简体' },
+    { code: 'chi_tra', label: '中文繁體' },
+    { code: 'fra', label: 'Français' },
+    { code: 'deu', label: 'Deutsch' },
+    { code: 'spa', label: 'Español' },
 ];
 
 export default function OCRPage() {
     const [image, setImage] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [text, setText] = useState('');
     const [loading, setLoading] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [progressStatus, setProgressStatus] = useState('');
-    const [language, setLanguage] = useState('eng');
+    const [confidence, setConfidence] = useState<number | null>(null);
+    const [processingTime, setProcessingTime] = useState<number | null>(null);
+    const [language, setLanguage] = useState('vie');
     const [copied, setCopied] = useState(false);
     const [dragOver, setDragOver] = useState(false);
 
-    const workerRef = useRef<Worker | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toasts, addToast, removeToast } = useToast();
 
-    // Cleanup worker on unmount
-    useEffect(() => {
-        return () => {
-            if (workerRef.current) {
-                workerRef.current.terminate();
-            }
-        };
-    }, []);
-
-    const processImage = useCallback(async (imageData: string) => {
+    const processImage = useCallback(async (file: File) => {
         setLoading(true);
-        setProgress(0);
-        setProgressStatus('Initializing...');
         setText('');
+        setConfidence(null);
+        setProcessingTime(null);
 
         try {
-            // Terminate old worker if exists
-            if (workerRef.current) {
-                await workerRef.current.terminate();
-            }
+            const formData = new FormData();
+            formData.append('image', file);
 
-            // Create new worker
-            const worker = await createWorker(language, 1, {
-                logger: (m) => {
-                    if (m.status) {
-                        setProgressStatus(m.status);
-                    }
-                    if (m.progress) {
-                        setProgress(Math.round(m.progress * 100));
-                    }
-                },
+            const response = await fetch(`${API_BASE}/ocr/recognize?language=${language}`, {
+                method: 'POST',
+                body: formData,
             });
 
-            workerRef.current = worker;
+            const data = await response.json();
 
-            const { data } = await worker.recognize(imageData);
-            setText(data.text);
-            addToast('Text extracted successfully!', 'success');
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'OCR processing failed');
+            }
+
+            setText(data.text || '');
+            setConfidence(data.confidence);
+            setProcessingTime(data.processingTime);
+            addToast(`Text extracted successfully! (${data.confidence}% confidence)`, 'success');
         } catch (err) {
             console.error('OCR error:', err);
-            addToast('Failed to extract text from image', 'error');
+            addToast(err instanceof Error ? err.message : 'Failed to extract text from image', 'error');
         } finally {
             setLoading(false);
-            setProgress(100);
-            setProgressStatus('Complete');
         }
     }, [language, addToast]);
 
@@ -83,11 +73,13 @@ export default function OCRPage() {
             return;
         }
 
+        setImageFile(file);
+
         const reader = new FileReader();
         reader.onload = (e) => {
             const result = e.target?.result as string;
             setImage(result);
-            processImage(result);
+            processImage(file);
         };
         reader.readAsDataURL(file);
     }, [addToast, processImage]);
@@ -147,17 +139,18 @@ export default function OCRPage() {
 
     const handleClear = () => {
         setImage(null);
+        setImageFile(null);
         setText('');
-        setProgress(0);
-        setProgressStatus('');
+        setConfidence(null);
+        setProcessingTime(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
 
     const handleReprocess = () => {
-        if (image) {
-            processImage(image);
+        if (imageFile) {
+            processImage(imageFile);
         }
     };
 
@@ -176,7 +169,7 @@ export default function OCRPage() {
                     <h1>OCR Scanner</h1>
                 </div>
                 <p className={styles.tagline}>
-                    Extract text from images using AI-powered OCR
+                    Extract text from images using server-side OCR
                 </p>
             </header>
 
@@ -252,18 +245,33 @@ export default function OCRPage() {
                         )}
                     </div>
 
-                    {/* Progress */}
+                    {/* Processing Info */}
                     {loading && (
                         <div className={styles.progressSection}>
                             <div className={styles.progressBar}>
-                                <div
-                                    className={styles.progressFill}
-                                    style={{ width: `${progress}%` }}
-                                />
+                                <div className={`${styles.progressFill} ${styles.indeterminate}`} />
                             </div>
                             <span className={styles.progressText}>
-                                {progressStatus} ({progress}%)
+                                Processing on server...
                             </span>
+                        </div>
+                    )}
+
+                    {/* Stats */}
+                    {(confidence !== null || processingTime !== null) && (
+                        <div className={styles.statsSection}>
+                            {confidence !== null && (
+                                <div className={styles.statItem}>
+                                    <span className={styles.statLabel}>Confidence</span>
+                                    <span className={styles.statValue}>{confidence}%</span>
+                                </div>
+                            )}
+                            {processingTime !== null && (
+                                <div className={styles.statItem}>
+                                    <span className={styles.statLabel}>Processing Time</span>
+                                    <span className={styles.statValue}>{processingTime}ms</span>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -273,7 +281,11 @@ export default function OCRPage() {
                         <div className={styles.featuresList}>
                             <div className={styles.featureItem}>
                                 <CheckIcon size={20} className={styles.featureIcon} />
-                                <span>Runs entirely in browser</span>
+                                <span>Server-side processing (faster)</span>
+                            </div>
+                            <div className={styles.featureItem}>
+                                <CheckIcon size={20} className={styles.featureIcon} />
+                                <span>Auto image enhancement</span>
                             </div>
                             <div className={styles.featureItem}>
                                 <CheckIcon size={20} className={styles.featureIcon} />
@@ -282,10 +294,6 @@ export default function OCRPage() {
                             <div className={styles.featureItem}>
                                 <CheckIcon size={20} className={styles.featureIcon} />
                                 <span>Paste from clipboard</span>
-                            </div>
-                            <div className={styles.featureItem}>
-                                <CheckIcon size={20} className={styles.featureIcon} />
-                                <span>No data sent to servers</span>
                             </div>
                         </div>
                     </div>
@@ -320,7 +328,7 @@ export default function OCRPage() {
                         {loading ? (
                             <div className={styles.loadingPlaceholder}>
                                 <div className={styles.spinner}></div>
-                                <p>Processing image...</p>
+                                <p>Processing image on server...</p>
                             </div>
                         ) : text ? (
                             <textarea

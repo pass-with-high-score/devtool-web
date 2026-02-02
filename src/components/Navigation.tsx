@@ -34,36 +34,72 @@ interface NavItem {
     icon: React.ReactNode;
 }
 
-// Core tools - always visible
-const coreTools: NavItem[] = [
-    { href: '/check-subdomain', label: 'Subdomain', icon: <SearchIcon size={18} /> },
-    { href: '/otp', label: 'OTP', icon: <KeyIcon size={18} /> },
-    { href: '/webhook', label: 'Webhook', icon: <LinkIcon size={18} /> },
-    { href: '/json', label: 'JSON', icon: <CodeIcon size={18} /> },
-    { href: '/upload', label: 'Upload', icon: <UploadIcon size={18} /> },
+interface NavCategory {
+    id: string;
+    label: string;
+    items: NavItem[];
+}
+
+// Organized tools by category
+const categories: NavCategory[] = [
+    {
+        id: 'qr',
+        label: 'QR & Scanner',
+        items: [
+            { href: '/qrcode', label: 'QR Code', icon: <QRCodeIcon size={18} /> },
+            { href: '/qr-scanner', label: 'QR Scan', icon: <ScanIcon size={18} /> },
+            { href: '/vietqr', label: 'VietQR', icon: <BankIcon size={18} /> },
+            { href: '/ocr', label: 'OCR', icon: <ScanTextIcon size={18} /> },
+        ],
+    },
+    {
+        id: 'media',
+        label: 'Media',
+        items: [
+            { href: '/youtube', label: 'YouTube', icon: <YouTubeIcon size={18} /> },
+            { href: '/video', label: 'Video', icon: <PlayIcon size={18} /> },
+            { href: '/audio', label: 'Audio', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg> },
+            { href: '/stream', label: 'Stream', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" /><circle cx="2" cy="20" r="1" fill="currentColor" /></svg> },
+            { href: '/m3u8', label: 'M3U8', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> },
+            { href: '/upload', label: 'Upload', icon: <UploadIcon size={18} /> },
+        ],
+    },
+    {
+        id: 'data',
+        label: 'Data',
+        items: [
+            { href: '/json', label: 'JSON', icon: <CodeIcon size={18} /> },
+            { href: '/json-viewer', label: 'JSON View', icon: <JSONViewerIcon size={18} /> },
+            { href: '/markdown', label: 'Markdown', icon: <MarkdownIcon size={18} /> },
+            { href: '/base64', label: 'Base64', icon: <ImageIcon size={18} /> },
+        ],
+    },
+    {
+        id: 'dev',
+        label: 'Dev',
+        items: [
+            { href: '/check-subdomain', label: 'Subdomain', icon: <SearchIcon size={18} /> },
+            { href: '/webhook', label: 'Webhook', icon: <LinkIcon size={18} /> },
+            { href: '/ip', label: 'IP Check', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="10" r="3" /><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z" /></svg> },
+            { href: '/transfer', label: 'Transfer', icon: <FileIcon size={18} /> },
+        ],
+    },
+    {
+        id: 'utilities',
+        label: 'Utilities',
+        items: [
+            { href: '/otp', label: 'OTP', icon: <KeyIcon size={18} /> },
+            { href: '/color-picker', label: 'Colors', icon: <ColorPickerIcon size={18} /> },
+            { href: '/speech', label: 'Speech', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg> },
+            { href: '/capsule', label: 'Capsule', icon: <HourglassIcon size={18} /> },
+            { href: '/aneko-builder', label: 'ANeko', icon: <Image src="/aneko.png" alt="ANeko" width={18} height={18} style={{ imageRendering: 'pixelated' }} /> },
+            { href: '/chat', label: 'Chat', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> },
+        ],
+    },
 ];
 
-// More tools - in dropdown on desktop, visible on mobile menu
-const moreTools: NavItem[] = [
-    { href: '/ocr', label: 'OCR', icon: <ScanTextIcon size={18} /> },
-    { href: '/color-picker', label: 'Color Picker', icon: <ColorPickerIcon size={18} /> },
-    { href: '/qrcode', label: 'QR Code', icon: <QRCodeIcon size={18} /> },
-    { href: '/qr-scanner', label: 'QR Scan', icon: <ScanIcon size={18} /> },
-    { href: '/vietqr', label: 'VietQR', icon: <BankIcon size={18} /> },
-    { href: '/json-viewer', label: 'JSON View', icon: <JSONViewerIcon size={18} /> },
-    { href: '/markdown', label: 'Markdown', icon: <MarkdownIcon size={18} /> },
-    { href: '/youtube', label: 'YouTube', icon: <YouTubeIcon size={18} /> },
-    { href: '/video', label: 'Video', icon: <PlayIcon size={18} /> },
-    { href: '/audio', label: 'Audio', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg> },
-    { href: '/stream', label: 'Stream', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" /><circle cx="2" cy="20" r="1" fill="currentColor" /></svg> },
-    { href: '/speech', label: 'Speech', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg> },
-    { href: '/ip', label: 'IP Check', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="10" r="3" /><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z" /></svg> },
-    { href: '/transfer', label: 'Transfer', icon: <FileIcon size={18} /> },
-    { href: '/m3u8', label: 'M3U8', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> },
-    { href: '/base64', label: 'Base64', icon: <ImageIcon size={18} /> },
-    { href: '/capsule', label: 'Capsule', icon: <HourglassIcon size={18} /> },
-    { href: '/aneko-builder', label: 'ANeko', icon: <Image src="/aneko.png" alt="ANeko" width={18} height={18} style={{ imageRendering: 'pixelated' }} /> },
-];
+// Get all tools flat list
+const allTools = categories.flatMap(cat => cat.items);
 
 // Menu icon for mobile
 function MenuIcon({ size = 24 }: { size?: number }) {
@@ -87,7 +123,7 @@ function CloseIcon({ size = 24 }: { size?: number }) {
 
 export default function Navigation() {
     const pathname = usePathname();
-    const [moreOpen, setMoreOpen] = useState(false);
+    const [openCategory, setOpenCategory] = useState<string | null>(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
@@ -97,7 +133,17 @@ export default function Navigation() {
 
     const isActive = (href: string) => mounted && (pathname === href || pathname?.startsWith(href + '/'));
 
-    const allTools = [...coreTools, ...moreTools];
+    const isCategoryActive = (category: NavCategory) => {
+        return category.items.some(item => isActive(item.href));
+    };
+
+    const handleCategoryClick = (categoryId: string) => {
+        setOpenCategory(openCategory === categoryId ? null : categoryId);
+    };
+
+    const handleCategoryBlur = () => {
+        setTimeout(() => setOpenCategory(null), 150);
+    };
 
     return (
         <>
@@ -111,46 +157,35 @@ export default function Navigation() {
                         <span className={styles.brandText}>DevTools</span>
                     </Link>
 
-                    {/* Desktop Nav Links */}
+                    {/* Desktop Nav Links - Category Dropdowns */}
                     <div className={styles.navLinks}>
-                        {/* Core Tools */}
-                        {coreTools.map((item) => (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`${styles.navLink} ${isActive(item.href) ? styles.active : ''}`}
-                            >
-                                {item.icon}
-                                <span>{item.label}</span>
-                            </Link>
+                        {categories.map((category) => (
+                            <div key={category.id} className={styles.moreWrapper}>
+                                <button
+                                    className={`${styles.navLink} ${styles.moreButton} ${isCategoryActive(category) ? styles.active : ''}`}
+                                    onClick={() => handleCategoryClick(category.id)}
+                                    onBlur={handleCategoryBlur}
+                                >
+                                    <span>{category.label}</span>
+                                    <ChevronDownIcon size={14} />
+                                </button>
+                                {openCategory === category.id && (
+                                    <div className={styles.dropdown}>
+                                        {category.items.map((item) => (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                className={`${styles.dropdownItem} ${isActive(item.href) ? styles.active : ''}`}
+                                                onClick={() => setOpenCategory(null)}
+                                            >
+                                                {item.icon}
+                                                <span>{item.label}</span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         ))}
-
-                        {/* More Dropdown */}
-                        <div className={styles.moreWrapper}>
-                            <button
-                                className={`${styles.navLink} ${styles.moreButton} ${moreTools.some(t => isActive(t.href)) ? styles.active : ''}`}
-                                onClick={() => setMoreOpen(!moreOpen)}
-                                onBlur={() => setTimeout(() => setMoreOpen(false), 150)}
-                            >
-                                <span>More</span>
-                                <ChevronDownIcon size={14} />
-                            </button>
-                            {moreOpen && (
-                                <div className={styles.dropdown}>
-                                    {moreTools.map((item) => (
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            className={`${styles.dropdownItem} ${isActive(item.href) ? styles.active : ''}`}
-                                            onClick={() => setMoreOpen(false)}
-                                        >
-                                            {item.icon}
-                                            <span>{item.label}</span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
 
                         {/* GitHub Link */}
                         <a
@@ -185,19 +220,31 @@ export default function Navigation() {
                                 <CloseIcon size={20} />
                             </button>
                         </div>
-                        <div className={styles.mobileMenuItems}>
-                            {allTools.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={`${styles.mobileMenuItem} ${isActive(item.href) ? styles.active : ''}`}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    {item.icon}
-                                    <span>{item.label}</span>
-                                </Link>
+
+                        {/* Mobile Categories */}
+                        <div className={styles.mobileCategoriesContainer}>
+                            {categories.map((category) => (
+                                <div key={category.id} className={styles.mobileCategory}>
+                                    <div className={styles.mobileCategoryHeader}>
+                                        {category.label}
+                                    </div>
+                                    <div className={styles.mobileCategoryItems}>
+                                        {category.items.map((item) => (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                className={`${styles.mobileMenuItem} ${isActive(item.href) ? styles.active : ''}`}
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                {item.icon}
+                                                <span>{item.label}</span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
                             ))}
                         </div>
+
                         <a
                             href="https://github.com/pass-with-high-score/devtool-web"
                             target="_blank"
